@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkBuddy 用量监视</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="0" y="0" width="32" height="32" rx="9" fill="url(#lg)"/>
+          <rect x="7.5" y="17" width="4" height="8" rx="1.6" fill="#fff" opacity=".95"/>
+          <rect x="14" y="12.5" width="4" height="12.5" rx="1.6" fill="#fff" opacity=".95"/>
+          <rect x="20.5" y="8" width="4" height="17" rx="1.6" fill="#fff" opacity=".95"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0" stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand-txt">
+        <h1>WorkBuddy <em>用量监视</em></h1>
+        <div class="sub"><span id="live-status">正在读取本地记录…</span></div>
+      </div>
+    </div>
+
+    <nav class="seg" id="range">
+      <button data-range="today" class="on">今日</button>
+      <button data-range="7d">近 7 天</button>
+      <button data-range="all">全部</button>
+    </nav>
+
+    <div class="top-right">
+      <div class="live" id="livebadge"><i></i>实时</div>
+      <button class="icon-btn" id="pause" title="暂停 / 继续刷新">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <article class="kpi" style="--a:#6366f1;--b:#8b5cf6">
+      <div class="kpi-top"><span>总 Token</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-6m5 6V7" stroke-linecap="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="tokens">0</b></div>
+      <div class="kpi-foot"><span data-k="inout">输入 — · 输出 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#0891b2;--b:#06b6d4">
+      <div class="kpi-top"><span>缓存命中率</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1m0-12.8l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="hitrate">0</b><small>%</small></div>
+      <div class="kpi-foot"><span data-k="hitinfo">命中 — / 未命中 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#7c3aed;--b:#a78bfa">
+      <div class="kpi-top"><span>平均生成速度</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="speed">0</b><small>tok/s</small></div>
+      <div class="kpi-foot"><span data-k="speedinfo">峰值 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#d97706;--b:#f59e0b">
+      <div class="kpi-top"><span>积分消耗</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4" stroke-linecap="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="credit">0</b><small>分</small></div>
+      <div class="kpi-foot"><span data-k="creditinfo">今日 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#475569;--b:#94a3b8">
+      <div class="kpi-top"><span>调用次数</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h13" stroke-linecap="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="calls">0</b><small>次</small></div>
+      <div class="kpi-foot"><span data-k="callinfo">生成耗时 —</span></div>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card c-speed">
+      <header>
+        <h2>生成吞吐</h2>
+        <span class="tag">tokens/s · 近 60 分钟</span>
+      </header>
+      <div class="big-row">
+        <div class="big"><b id="now-speed">0</b><small>tok/s</small></div>
+        <div class="big-sub" id="now-sub">等待中</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-speed"></canvas></div>
+    </article>
+
+    <article class="card c-model">
+      <header><h2>模型分布</h2><span class="tag">按 token</span></header>
+      <div class="donut-wrap">
+        <canvas id="chart-models"></canvas>
+        <div class="donut-center"><b id="model-total">—</b><span>总 Token</span></div>
+      </div>
+      <ul class="legend" id="model-legend"></ul>
+    </article>
+
+    <article class="card c-usage">
+      <header><h2>Token 用量</h2><span class="tag" id="usage-tag">按小时</span></header>
+      <div class="chart-wrap tall"><canvas id="chart-usage"></canvas></div>
+      <div class="legend-inline">
+        <span><i style="background:#06b6d4"></i>缓存命中</span>
+        <span><i style="background:#f59e0b"></i>未命中</span>
+        <span><i style="background:#7c3aed"></i>输出</span>
+      </div>
+    </article>
+
+    <article class="card c-cache">
+      <header><h2>缓存命中率</h2><span class="tag" id="cache-tag">按小时</span></header>
+      <div class="chart-wrap tall"><canvas id="chart-cache"></canvas></div>
+      <div class="cache-note" id="cache-note">缓存让重复上下文无需重新计费</div>
+    </article>
+  </section>
+
+  <section class="card c-sessions">
+    <header>
+      <h2>会话用量排行</h2>
+      <span class="tag">上下文占用为当前窗口</span>
+    </header>
+    <div class="table-wrap">
+      <table id="tbl-sessions">
+        <thead>
+          <tr>
+            <th class="col-title">会话</th>
+            <th>模型</th>
+            <th class="num">Token</th>
+            <th class="num">调用</th>
+            <th class="num">命中率</th>
+            <th class="num">速度</th>
+            <th class="num">积分</th>
+            <th class="col-ctx">上下文</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card c-stream">
+    <header><h2>实时调用流</h2><span class="tag" id="stream-tag">最新 24 次</span></header>
+    <ul class="stream" id="stream"></ul>
+  </section>
+
+  <footer class="foot">
+    <span id="foot-src">数据源：~/.workbuddy</span>
+    <span class="dotsep">·</span>
+    <span id="foot-stat">—</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+<script src="app.js"></script>
+</body>
+</html>

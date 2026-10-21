@@ -1,0 +1,14 @@
+# 运行时产物
+.runtime/
+__pycache__/
+*.py[cod]
+*.log
+
+# 本地真实用量快照（含个人会话信息，不提交）
+preview.local.html
+
+# 编辑器与系统
+.idea/
+.vscode/
+*.swp
+.DS_Store

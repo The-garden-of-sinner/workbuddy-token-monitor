@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkBuddy 用量监视</title>
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAASjklEQVR42u3de28c133G8X0HfAl6KXwJegNJKEui7uQu936/30jZZmDFDhopUS5Faym1GbtybMmN2TTtH20KCL0ABYq2aoIgbdC0FndmScuSPP2dHS41nPk9w3NmztmlFBL4/CdGyDzfnTlaLeVEwsBXvWYt1KvWadIgW2SbOEIjRBNo+VVc7YrN6jC6Ksq20wP6wAAYMtZLUrbJ1kbJbpDTZCFxnL9qVesUSZKHxKntD86JNf5BAHaAShCdGYwfQMMOARTCxmEPSfJ6yT51nIZfJFvT0SdooDrQUNDklGl8oA10gC6jV1LTBwYstQA2wom7w+Lchq/S8GSbOF5ifE49QhQ6xpcOggbqAlrGL1rOsGhLWwc2grY3CjMMoVKxFshmlQbh1Mq8OtAAmgpi3xFK0QKQDaJfFAHYrNgBFGznumuTLJgef5E8qnDjl/H4KkGwUZRcTaDFaAMdTpHXBXpAHxjQQJwhsK5g47BHxu4G5fJoiTgVoArUgDrQ4ISMLxsEjKJoMICCYAcMQkhHkXdtMK7n7SXd498W47MBlFxVoMaoK2gUBYvVBFpAm6E6vnQQBfUAlO4IYHyP2+bH9wTgpxIEjELj+AE0ThvoAF2g55d39WkIzoAxVJGjAICNw+JFUCqNbhNHKAOVIq8K1IA6A42vEkQTjK8agPT4BwHYASpBDOKPHy8CGn1pOj4bQFF9fOkgChTAhBXQAJpAi0MDtRV0gC7QowvP6QMDYMhYV+CJYEl1/EXv+AFFNwBO7DtCYRqAJR1AU4EYH4kdQE59fOkgshQAsA5sHCb3p4NicbRAHhFHKPkVXGWgwqgCNYQupl8daABNwOT4Ljsg9h0hqx7ARtAjsiATwCYcvxg+vmwQMIo8P76WAGicloJ2iI5f1tWlC83pMfrAgJOhoRWsAxsZezN0/EJhtEgcoQiUgNgBRBhfOoicGwBHNYAOCEBl/J5KFBk3AE6EAITFsAC24fg0UAkoAxVZOQpgwgqoAXWgwaGBmkCL0VbgvvrtgG4I6QD0jy9sq7/681jsKHLTACzpAFTH56gEAaPI0Ph0UTldoAf0/dKugYIhsB4UvAvk86Mt4hQ4NFCRUQLKQIWTpfHpYsqqAXXAWAARxpcOIu3qAzHHd9bX7C3/+KfyYHg0flgA0lFkRQAWK3YANFADaAItBe20YAd0gC7Q46zR0MAAGDLWobHw4kMl+dwoSRy/QgiVKEyPH5BxA+DEjiLt4sZvGx4/bhDDFI2fGk8lvQE8DARAAxWAIlACyhy6mH4VoBqixqGB6kCD0QRaABo/9h1hzQ2AEzuAVCCAh9PxF1TGVwmCjSLj0hGAjvFVgmiuUQB0MTltoAN0/WicHtAHBsCQkxTGfguJXHZ0mjhe+QyvABSBEsCNX47w6g8EkcZUo5j1+IiWKPjxhdMigMbB+BmXSgBFBaW0YAWUgQpQ5dBANaAONIAmJ0UB0MWU0Q7R4dBAXaDH6AMDAIzvrCfHjUQ2O9oiTtYTgJ+WOwIYX0sAIePHDiLlatJQHJUAdIzfUxl/VRgHDF/YSmQzo23iZGmgHJAHCkCRUaKLySkrqADVFK8G1IEGoDJ+S3F8jo4g+mB8XwDbiajjSwexRgFMWAGqUQTGT7lUAlAaPynYAU2gBbQ5NFAH6AI9oM9ZoQBWxgFDn0SGRsqu8XJAHigA3PjFuOOvhY8f+44AxpcNQHyWb+uP95ztnz5x/hK4c3NP//gr2ICRyJgcPyVYAUWgBJQ5NFAFqAI1oM5o0MXkNIGWx/ff2nV2x8+dr7766kj/9/tnzh8Nx06bxugAXaAHKAfgp+WOAMbXEoDJ8Ven7ACZKMQrX3b8qd/++plyAOz412hoYAAkMjSUXxbIMfJAgS4mpwiUgLKkio4oVl11oMFo+nz83hdK4099h+4CnRUroAv0/K5ZkwD8jgoiEWd8VpICoIvJiR3FqqsMVBhVoMahC1kHGkDTZ/ujaAH84Jv0GKARpzohupyrFMBVO6APDPYl0jTaVAaQjiKJA9ByR1AcPyyAQBArvLpiFJ9RAM+fP1f2fckAuOHR+L0jxncDoMGEDJAFcn6rrjxQkFQESiu8cogKUGXU6GJy6kAD+OxejABoSKEDdCE7QDaIgwD8lINYxVSiYANYUQ9AevxrLh3jxwpgc+y09gPgsFFcofGv2Kwe0PdJrK3uOGkgw8gCObqYnDxQAIqMKK9+qSCuTQOwAqLeEUwEYGr8SQAq47MBrODxjwqikR85d3606zyg56bwKePDH+8563U6F9BQXiWgDFQ4V2l8upicGlBnNDwiB/AmPQJoVE6Hc9kO6AK9EJM7gJdSECtuAFka0++oADaHtvO///NM6oQ8tp87d3+4e2QA8xjf72d/vuc8e/ZMmQigRcP6BYK47NIRQH8SAA3olQYynGs0Pl1MTo6R9/jNr58q/TFJRDCs0Z2AhuOUgDJQoYvJqQI1oO4TNYDbIgAa1qsNcON3IowfCCCtQIyfoSH9ZIJ4c2BH+rOyeBzEDuCKufHrNM7PPowYwBvjo8e/JNgBHaAL9DwSKRpSWAPSADe+bADf/qYd6Tn54N5e7PFRAFUFMIiYATTp+5u+u8ABML7RANjxr9L4dDE5WSDn8+3NiAHQ7bVAA04VgRLnMo0/YQVUgCpQ49BA9UsxA6DvF1qM9kWb1QG6QM/nIAA/9o5wVQQwYqlE8c7cArBiBxA2vvAXH+w5T58+Vfa918f8+Ben7EO0BHFBBECjctY4VygAuph+GSALxLoD0JBTRUYJKNPFlFUBqkDt4guxAqDv5/jHD4tASwDc8Gj8sABQEO+8GS2A+xRA3hOAHxdE8RIFQCNxYgdw0WUsgAs0Po3EaQMdRpezTI8AkkjSwF7sHWESwIilEoU3gCjPyfsfKgZwCQdgYnytAVwQ7AAdQXSW3QC6kwBo3KkU5zKNTxeTkwYyQHbfO29ED6BAg3KKnIuCFVBilIEKUL3A+/QnEQO4PnYa9P1TTRqH0wLaQIdznsbfFx7AZWEUEDeIt2MEkKdh/dgowPgogJJKABfCAth1vvzyS2XfvW674y8bHP/84fEnAazSyEKSc4kCoIvptwakgYxP5ADo9pqnYb0KQJEuJqcElIEKA41fixvAsrXPPkRbEOeDEqtgeDR+Kub4kwBetyPdJj/5YDcQQCCIC4IVoCUIGqcCVPd9uhUxgA3bqZ+n8WkUTpPRAtqcczQ44+AO4OUGMApQCQJGcTFeADn6/qlAAGB8LQEsGw5gfaw0flPD+G4ANPYhF2l8upicFLAGpP1ooAx5+3rEAOj2mqPvF/KcZQqARvArAiWgzKFXZwWoejygAJ48eaJsEgANIqMJtID2WV7nrD8Aw+PHDeBjTwCHLLvj52kovwKgFMV5NwA/LoYH70cL4NZw7NRpLK/YAZx1ofEnAazQ6FOrdDE5SSAFrHFooPS+b9HzLsptchLA8oiVp4vPKQBFRgkozyEAk+MHA7jgmsX4sQLYYgI4r2d8NoBzNDRQASIHMKAAaBCkATSB1mu8tk8ibHwtQSwH3YgRQJa+/8B5EYDFUomCDeKcGwAnLIo4AdRouJpiBGwArykEcG2ZAqCLyVkFkowUhwZaY9xYjxHA+dEL5ygAuuh+eaAAFDlnaWygzKjsu//e2Pniiy+U3RQB0CB1oAE0Ga0zvDYjoWP8pML4bgBWpFfJT98fHwyPxs/NYXwdAdzqj+H40kHQoE1GWBCJa3RBvVaAVSAJpIC4AWQOArACwoIQH93+4E/2nH/7l6ehPqRf07zqRuAnE0XkO0DfvQP4SQdwBgfQnGkA51wpYI3cGMYI4CyNTxeakwPEp3V/85/yH0IVv7Z5hUZ/7YUSUPa5/2cxAqBBvOpAg7NEQwMtoL0kGYDSq/+I8WMFQK8u1fHz5Je/eKL8AVTxParj6wxA1/hHBZG4SoMI14AVYBVInuWlPN6KHMCuk6GL7JcFcvt+/7unyh8+Ed9TOGNNFBkl4BMKYG9vT9l3erZTXXqhxqgDjW/wmkDLQ18AZ+XGnwQwsCK9Sj6ii6s6vhDl00cCGh8FUBYB/Dh+ADXZAL4Rb/yDAHSMvyo5/iwCyGkKoKj46tcRgMr49ZjjTwIwOb7pALKSAUT57IGgOn6cAG729IzfUBgfBqD03FccX1cAsuPrDOCo8U0EUDd06xfaXACmx1/bDyDKRZoGoDK+EOVvHgXV8d0AbGd3d1fZze5sx1cKQOf4cQNQHT+vIQDZ8ScB3DUYgObxAwGYOPH7xzcRQNj4pgLgxi8viQDGWgIwdejzjn8oAFMnfv/4swog7xHlL54EpVc/jV+hoXQEYPLQ1+YCMHniXwMBRLlIH9HzVfXVHycAlfF1BWD60BcIYGVGz32vG5oCkBlfdwBh47sB2M54PFYmAqjP6Ll/4OsgAJPj6wpAdvz8mWhvOwuyz/3p+NoDMDy+fAAax09rCEB6fI0ByIyvNYAZjN/5+jgYgIlDn3f8uAGojl8wFQAzvrYADJ34vQGI8QMBmDr0eccX3uqPIl0kFEDY+EKUdx0F2ee+1gAMnvj94x8KwORzPz3rADzjxw1AZfxJAHdsx7bVeQMwdeL3j38QwOoMnvumAuDG1xVAWeHWX9n/q9xYARh+7vvHnwQw6/HTr9EZoG9pCUBmfCHKm06C6vixAujM5tB3dACGx58E0LMiXaR7d+Wf+9oDkBg/TgC3OrMfPxiAgRO/PwDxt3lxA1AZX0sAkuPPKoBWzOf+VPdQAIZO/P7xjQQQMr54Pz/KHzmFow59VcbHdyzHstTd6lgzOfR5xw8EYOLE7x8/TgAf3ZV/7ns/zxc5gCW1V797B9ATgKlDn3f8FwEYfu77P8cnAohyke7dlR/fG0CUA6egOr6uAEw+97uBAGZw6DMZwFHjxwlAdfyahgBMH/qkAzA1vrYAJMfXHUDY+MLH71rOaDRSJgJozuDQFwhgFoc+7QEojC9EOW8IquObCMDk+DAA3Yc+/0e5b/RGkS7SvTsj5fFNB1CbQwC6xu9xAZg49Pk/ym0igLAf4tARQHUOAeg+8fvHDwRg8rmf1RSAyqt/+rd5UR43gur4OgMwceL3j38oAJPjmw6gaDAAlfHdAEbOzs6Osltty/iJ3z/+QQApw4e+rMEAZH5+L2oAquPXNQTQmsFzXyoAU+NPA4hyke69O1IeX4gSm6A6vqkATI0/CcD0iZ/zLQ0BqPzkrq4AZH54M2oA36UAZnHokwpA54mf+xy/qQBKcwigbjgA3Yc+rz4XgO4TP/c5/rgBqP6jDVF+L0H11T8J4E9HzuPHj5XdYgIwcejzjh8IwMSJn/sc/41utIt0792dSP9oQ9wAVH5uX1cAJp/7fS6ANcPPfZMBHPUjXHECUP1HG3QE0Db83JcOwMT4ugOQ+fm9X/2H+u/1q39/LD++59O8cQOY5fgHAZg+9HH++7/UL9IgPYr0jzb84sGO8u/11/d3Iv2LHW+kLOXf63e/fTyTE79//P7XKIBZHPq4j3LfemPkfP7559I+/clOpPEF8V/g/Nd/lh9E/Nqu+A9CRvyXuj7b2lH6//aj66OZnPilA9B96EMf5X69MnJ+fv+x8w+/xP72rx47b3dG0id+9FFu8V/efu97O84/0v9mmPfp16iMjz7Lf7M9cv7+54+df/o77G8+of9vJWtmJ37/+IP9ALZn8dyP8mneKCf+KB/ljvLHvVn/CJeOE79/fLItAtiaxfi5OYyv8mlepfHn8CNcOp/7gxe2RACNeY2fn8P4lWM0/jwOfb4AGiKA02vHaPxC3PE13vrnMb6xQ19wfOF0gsZeMH3iN3XrL8/huT+P8XUe+nwWEuKLRn9o+sT/Kh/6mi/Poc/rYWL6RcMnX4UTv7FD30ty4u/Jjy8kvQGcelVP/JU/8BM/CmD4tfGphPeLxt96KU/8L/mhbx7jT/745/+ioRf/kE/8tVfpxB9+6xev/sUE90WDbx/XQ1/5VTr0zefEPx1/O4G+/HeBk7d5X+q3ebnx8avfE8Hmydu8r8TbvNz4m4mjvmjkBfLo5G3eV+fQtz/+o+H0jR+JCBZP3uZ96d/mVbv1MxEsnbzN+0oc+oSlRJQvGv/2ydu8L/2h73YizleOieDkbd6X5tAXb3wUwcnbvMf+bV5943siWDp5m/eleJs3+jP/qC8afJE8Onmb99i+zftI+bQfIYIFsnnyNu+xO/FvSv85X0sIZ6xFGnr75G3euZ/4twemX/VhXwU3hK2Tt3lnfuLfmuvwTAinaOgkeXjyNq+xQ99D8Umegf/DHMfti0ZfIKdJg4beItsnb/Mqj79NtkiDxj89MPR8/3+CC1F03s3oiAAAAABJRU5ErkJggg==">
+<style>
+:root {
+  --bg: #f4f6fb;
+  --bg2: #eef1f8;
+  --panel: #ffffff;
+  --ink: #0f172a;
+  --ink2: #475569;
+  --ink3: #94a3b8;
+  --line: #e8ecf4;
+  --line2: #f1f4f9;
+  --indigo: #6366f1;
+  --violet: #8b5cf6;
+  --cyan: #06b6d4;
+  --amber: #f59e0b;
+  --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .22);
+  --shadow-h: 0 2px 4px rgba(15, 23, 42, .05), 0 18px 36px -22px rgba(15, 23, 42, .3);
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC",
+               "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 420px at 12% -8%, rgba(99, 102, 241, .10), transparent 60%),
+    radial-gradient(760px 380px at 88% 4%, rgba(6, 182, 212, .09), transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 26px 26px 30px;
+}
+
+/* ---------------- topbar ---------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 6px 4px 22px;
+  flex-wrap: wrap;
+}
+
+.brand { display: flex; align-items: center; gap: 13px; margin-right: auto; }
+
+.logo {
+  width: 42px; height: 42px;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.logo svg { width: 34px; height: 34px; }
+
+.brand-txt h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.brand-txt h1 em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink2);
+}
+.brand-txt .sub {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--ink3);
+  letter-spacing: .01em;
+}
+
+.seg {
+  display: inline-flex;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 3px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--ink2);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 7px 15px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .18s, color .18s, box-shadow .18s;
+  white-space: nowrap;
+}
+.seg button:hover { color: var(--ink); background: #f7f8fc; }
+.seg button.on {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(99, 102, 241, .5);
+}
+
+.top-right { display: flex; align-items: center; gap: 10px; }
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-weight: 500;
+  transition: opacity .2s;
+}
+.live i {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, .55);
+  animation: pulse 2s infinite;
+}
+.live.off { color: var(--ink3); background: #f8fafc; border-color: var(--line); }
+.live.off i { background: #cbd5e1; animation: none; box-shadow: none; }
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .5); }
+  70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+  transition: transform .15s, background .15s;
+}
+.icon-btn:hover { background: #f8fafc; transform: translateY(-1px); }
+.icon-btn svg { width: 14px; height: 14px; fill: var(--ink2); }
+
+/* ---------------- kpi ---------------- */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-h); }
+.kpi::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--a), var(--b));
+  opacity: .85;
+}
+.kpi::before {
+  content: "";
+  position: absolute;
+  width: 130px; height: 130px;
+  right: -52px; top: -62px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--a), transparent 68%);
+  opacity: .10;
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--ink3);
+  letter-spacing: .02em;
+}
+.kpi-ico {
+  width: 15px; height: 15px;
+  fill: none;
+  stroke: var(--a);
+  stroke-width: 1.6;
+  opacity: .65;
+}
+
+.kpi-val {
+  margin: 9px 0 5px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.kpi-val b {
+  font-size: 27px;
+  font-weight: 640;
+  letter-spacing: -.028em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.kpi-val small { font-size: 11.5px; color: var(--ink3); font-weight: 500; }
+
+.kpi-foot {
+  font-size: 11px;
+  color: var(--ink3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- cards ---------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 16px;
+  box-shadow: var(--shadow);
+  transition: box-shadow .22s ease;
+  min-width: 0;
+}
+.card:hover { box-shadow: var(--shadow-h); }
+
+.card > header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.card h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 620;
+  letter-spacing: -.005em;
+  color: var(--ink);
+}
+.tag {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-left: auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 148px;
+  margin-top: 4px;
+}
+.chart-wrap.tall { height: 186px; }
+.chart-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.big-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: -2px 0 2px;
+}
+.big { display: flex; align-items: baseline; gap: 5px; }
+.big b {
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.big small { font-size: 11.5px; color: var(--ink3); }
+.big-sub {
+  font-size: 11.5px;
+  color: var(--ink3);
+  padding-bottom: 3px;
+}
+
+.donut-wrap {
+  position: relative;
+  height: 172px;
+  display: grid;
+  place-items: center;
+}
+.donut-wrap canvas { width: 100%; height: 100%; position: absolute; inset: 0; }
+.donut-center {
+  position: relative;
+  text-align: center;
+  pointer-events: none;
+}
+.donut-center b {
+  display: block;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+.donut-center span {
+  font-size: 10.5px;
+  color: var(--ink3);
+  letter-spacing: .04em;
+}
+
+.legend {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--ink2);
+}
+.legend i {
+  width: 8px; height: 8px;
+  border-radius: 3px;
+  flex: none;
+}
+.legend .lname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.legend .lval {
+  margin-left: auto;
+  color: var(--ink3);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.legend-inline {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--ink3);
+  margin-top: 8px;
+  padding-left: 2px;
+}
+.legend-inline span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-inline i {
+  width: 8px; height: 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.cache-note {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-top: 8px;
+  padding-left: 2px;
+}
+
+/* ---------------- table ---------------- */
+
+.c-sessions { margin-bottom: 16px; }
+
+.table-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 550;
+  color: var(--ink3);
+  letter-spacing: .04em;
+  padding: 0 10px 9px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line2);
+}
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+tbody td {
+  padding: 10px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--line2);
+  color: var(--ink2);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: #fafbff; }
+
+td.col-title { max-width: 300px; }
+.title-cell { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.rank {
+  width: 18px; height: 18px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--ink3);
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-weight: 600;
+}
+tr:nth-child(1) .rank { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+tr:nth-child(2) .rank { background: #e0e7ff; color: #4f46e5; }
+tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
+.t-name {
+  font-size: 12.5px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.t-path {
+  font-size: 10.5px;
+  color: var(--ink3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+.model-chip {
+  display: inline-block;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--ink2);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.bar-cell { min-width: 96px; }
+.ctx-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+}
+.ctx-bar > i {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+}
+.ctx-txt {
+  font-size: 10px;
+  color: var(--ink3);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.pill.good { background: #ecfdf5; color: #059669; }
+.pill.mid { background: #fffbeb; color: #b45309; }
+.pill.bad { background: #fef2f2; color: #dc2626; }
+.pill.flat { background: #f1f5f9; color: var(--ink3); }
+
+/* ---------------- stream ---------------- */
+
+.c-stream { margin-bottom: 14px; }
+
+.stream { list-style: none; margin: 0; padding: 0; }
+
+.stream li {
+  display: grid;
+  grid-template-columns: 62px 116px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line2);
+  font-size: 12px;
+  color: var(--ink2);
+  animation: slideIn .35s ease both;
+}
+.stream li:last-child { border-bottom: 0; }
+.stream li.fresh { background: linear-gradient(90deg, rgba(99, 102, 241, .055), transparent 70%); }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.st-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink3);
+  font-size: 11px;
+}
+.st-model {
+  font-size: 11px;
+  color: var(--ink2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-bars { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mini-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: #eef2f7;
+  position: relative;
+  flex: 1;
+  min-width: 40px;
+  overflow: hidden;
+  display: flex;
+}
+.mini-bar i { height: 100%; display: block; flex: 0 0 auto; }
+.st-nums {
+  font-size: 11px;
+  color: var(--ink3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.st-speed {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  font-weight: 550;
+  min-width: 62px;
+  text-align: right;
+}
+.st-speed.zero { color: var(--ink3); font-weight: 400; }
+
+.foot {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  font-size: 10.5px;
+  color: var(--ink3);
+  padding: 6px 0 0;
+}
+.dotsep { opacity: .5; }
+
+/* ---------------- tooltip ---------------- */
+
+.tip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  background: rgba(15, 23, 42, .93);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.55;
+  padding: 7px 10px;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, .5);
+  opacity: 0;
+  transform: translate(-50%, -120%) scale(.97);
+  transition: opacity .12s, transform .12s;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+.tip.show { opacity: 1; transform: translate(-50%, -130%) scale(1); }
+.tip b { font-weight: 600; }
+.tip .k { color: #cbd5e1; }
+
+/* ---------------- responsive ---------------- */
+
+@media (max-width: 1240px) {
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+  .grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 860px) {
+  .app { padding: 18px 14px 24px; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .topbar { gap: 12px; }
+  .stream li { grid-template-columns: 54px 1fr auto; }
+
+  .stream .st-nums { display: none; }
+  .stream .st-model { display: none; }
+  td.col-ctx { display: none; }
+  th.col-ctx { display: none; }
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #d5dbe7;
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: #c2c9d8; }
+
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="0" y="0" width="32" height="32" rx="9" fill="url(#lg)"/>
+          <rect x="7.5" y="17" width="4" height="8" rx="1.6" fill="#fff" opacity=".95"/>
+          <rect x="14" y="12.5" width="4" height="12.5" rx="1.6" fill="#fff" opacity=".95"/>
+          <rect x="20.5" y="8" width="4" height="17" rx="1.6" fill="#fff" opacity=".95"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0" stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand-txt">
+        <h1>WorkBuddy <em>用量监视</em></h1>
+        <div class="sub"><span id="live-status">正在读取本地记录…</span></div>
+      </div>
+    </div>
+
+    <nav class="seg" id="range">
+      <button data-range="today" class="on">今日</button>
+      <button data-range="7d">近 7 天</button>
+      <button data-range="all">全部</button>
+    </nav>
+
+    <div class="top-right">
+      <div class="live" id="livebadge"><i></i>实时</div>
+      <button class="icon-btn" id="pause" title="暂停 / 继续刷新">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <article class="kpi" style="--a:#6366f1;--b:#8b5cf6">
+      <div class="kpi-top"><span>总 Token</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-6m5 6V7" stroke-linecap="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="tokens">0</b></div>
+      <div class="kpi-foot"><span data-k="inout">输入 — · 输出 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#0891b2;--b:#06b6d4">
+      <div class="kpi-top"><span>缓存命中率</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1m0-12.8l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="hitrate">0</b><small>%</small></div>
+      <div class="kpi-foot"><span data-k="hitinfo">命中 — / 未命中 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#7c3aed;--b:#a78bfa">
+      <div class="kpi-top"><span>平均生成速度</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="speed">0</b><small>tok/s</small></div>
+      <div class="kpi-foot"><span data-k="speedinfo">峰值 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#d97706;--b:#f59e0b">
+      <div class="kpi-top"><span>积分消耗</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4" stroke-linecap="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="credit">0</b><small>分</small></div>
+      <div class="kpi-foot"><span data-k="creditinfo">今日 —</span></div>
+    </article>
+
+    <article class="kpi" style="--a:#475569;--b:#94a3b8">
+      <div class="kpi-top"><span>调用次数</span>
+        <svg class="kpi-ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h13" stroke-linecap="round"/></svg>
+      </div>
+      <div class="kpi-val"><b data-k="calls">0</b><small>次</small></div>
+      <div class="kpi-foot"><span data-k="callinfo">生成耗时 —</span></div>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card c-speed">
+      <header>
+        <h2>生成吞吐</h2>
+        <span class="tag">tokens/s · 近 60 分钟</span>
+      </header>
+      <div class="big-row">
+        <div class="big"><b id="now-speed">0</b><small>tok/s</small></div>
+        <div class="big-sub" id="now-sub">等待中</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-speed"></canvas></div>
+    </article>
+
+    <article class="card c-model">
+      <header><h2>模型分布</h2><span class="tag">按 token</span></header>
+      <div class="donut-wrap">
+        <canvas id="chart-models"></canvas>
+        <div class="donut-center"><b id="model-total">—</b><span>总 Token</span></div>
+      </div>
+      <ul class="legend" id="model-legend"></ul>
+    </article>
+
+    <article class="card c-usage">
+      <header><h2>Token 用量</h2><span class="tag" id="usage-tag">按小时</span></header>
+      <div class="chart-wrap tall"><canvas id="chart-usage"></canvas></div>
+      <div class="legend-inline">
+        <span><i style="background:#06b6d4"></i>缓存命中</span>
+        <span><i style="background:#f59e0b"></i>未命中</span>
+        <span><i style="background:#7c3aed"></i>输出</span>
+      </div>
+    </article>
+
+    <article class="card c-cache">
+      <header><h2>缓存命中率</h2><span class="tag" id="cache-tag">按小时</span></header>
+      <div class="chart-wrap tall"><canvas id="chart-cache"></canvas></div>
+      <div class="cache-note" id="cache-note">缓存让重复上下文无需重新计费</div>
+    </article>
+  </section>
+
+  <section class="card c-sessions">
+    <header>
+      <h2>会话用量排行</h2>
+      <span class="tag">上下文占用为当前窗口</span>
+    </header>
+    <div class="table-wrap">
+      <table id="tbl-sessions">
+        <thead>
+          <tr>
+            <th class="col-title">会话</th>
+            <th>模型</th>
+            <th class="num">Token</th>
+            <th class="num">调用</th>
+            <th class="num">命中率</th>
+            <th class="num">速度</th>
+            <th class="num">积分</th>
+            <th class="col-ctx">上下文</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card c-stream">
+    <header><h2>实时调用流</h2><span class="tag" id="stream-tag">最新 24 次</span></header>
+    <ul class="stream" id="stream"></ul>
+  </section>
+
+  <footer class="foot">
+    <span id="foot-src">数据源：~/.workbuddy</span>
+    <span class="dotsep">·</span>
+    <span id="foot-stat">—</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+<script>window.__WB_SNAPSHOT__ = {"generated_at": 1792584938938, "range": "all", "kpi": {"tokens": 75970516, "input": 75587148, "output": 383368, "cache_hit": 72487186, "cache_miss": 3099962, "hit_rate": 0.9589882396409506, "credit": 28.01, "calls": 423, "avg_speed": 110.80896719965779, "peak_speed": 363.125, "gen_seconds": 3459.7, "today_tokens": 16623812, "today_credit": 4.18, "today_calls": 61, "all_tokens": 75970516}, "series": {"granularity": "day", "buckets": [{"label": "10/15", "hit": 5158302, "miss": 211677, "out": 52950, "credit": 3.894000000000002, "calls": 61, "t": 1791993600000}, {"label": "10/16", "hit": 6751221, "miss": 292454, "out": 47646, "credit": 3.557999999999999, "calls": 60, "t": 1792080000000}, {"label": "10/17", "hit": 8981214, "miss": 389376, "out": 57230, "credit": 4.181000000000001, "calls": 63, "t": 1792166400000}, {"label": "10/18", "hit": 10231181, "miss": 471961, "out": 55112, "credit": 4.007000000000001, "calls": 59, "t": 1792252800000}, {"label": "10/19", "hit": 11488522, "miss": 532223, "out": 54702, "credit": 3.9549999999999996, "calls": 56, "t": 1792339200000}, {"label": "10/20", "hit": 13903170, "miss": 609557, "out": 58206, "credit": 4.24, "calls": 63, "t": 1792425600000}, {"label": "10/21", "hit": 15973576, "miss": 592714, "out": 57522, "credit": 4.1789999999999985, "calls": 61, "t": 1792512000000}]}, "speeds": [{"t": 1792581338938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581398938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581458938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581518938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581578938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581638938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581698938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581758938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581818938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581878938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581938938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792581998938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582058938, "v": 120.6, "out": 897, "calls": 1}, {"t": 1792582118938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582178938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582238938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582298938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582358938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582418938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582478938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582538938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582598938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582658938, "v": 46.8, "out": 169, "calls": 1}, {"t": 1792582718938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582778938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582838938, "v": 78.0, "out": 1032, "calls": 1}, {"t": 1792582898938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792582958938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583018938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583078938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583138938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583198938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583258938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583318938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583378938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583438938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583498938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583558938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583618938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583678938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583738938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583798938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583858938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583918938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792583978938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584038938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584098938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584158938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584218938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584278938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584338938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584398938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584458938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584518938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584578938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584638938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584698938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584758938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584818938, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792584878938, "v": 363.1, "out": 1162, "calls": 1}], "models": [{"name": "DeepSeek-V4.1-Flash", "tokens": 36730179, "in": 36540529, "out": 189650, "calls": 206, "hit": 35072161, "credit": 13.82, "share": 0.4834793935057648}, {"name": "Claude-4.5-Sonnet", "tokens": 26146767, "in": 26013046, "out": 133721, "calls": 146, "hit": 24935641, "credit": 9.76, "share": 0.34416992771248256}, {"name": "Step-5-Preview", "tokens": 13093570, "in": 13033573, "out": 59997, "calls": 71, "hit": 12479384, "credit": 4.44, "share": 0.17235067878175264}], "sessions": [{"id": "demo-02", "title": "为 REST API 增加分页与限流", "cwd": "~/WorkBuddy/api-service", "model": "DeepSeek-V4.1-Flash", "tokens": 16933564, "in": 16848056, "out": 85508, "calls": 85, "hit_rate": 0.9600467852196123, "credit": 6.15, "speed": 114.3950339808423, "last": 1792582710220, "used": 259780, "size": 1000000, "active": false}, {"id": "demo-03", "title": "排查 CI 构建超时", "cwd": "~/WorkBuddy/ci-tools", "model": "Claude-4.5-Sonnet", "tokens": 14258664, "in": 14187240, "out": 71424, "calls": 77, "hit_rate": 0.9617406909307237, "credit": 5.2, "speed": 113.17741015402167, "last": 1792581022102, "used": 362263, "size": 1000000, "active": false}, {"id": "demo-05", "title": "整理组件库文档", "cwd": "~/WorkBuddy/ui-kit", "model": "Step-5-Preview", "tokens": 13093570, "in": 13033573, "out": 59997, "calls": 71, "hit_rate": 0.9574798867509317, "credit": 4.44, "speed": 103.36219579846122, "last": 1792582086841, "used": 257843, "size": 1000000, "active": false}, {"id": "demo-04", "title": "补充缓存层单元测试", "cwd": "~/WorkBuddy/api-service", "model": "Claude-4.5-Sonnet", "tokens": 11888103, "in": 11825806, "out": 62297, "calls": 69, "hit_rate": 0.954792848791871, "credit": 4.56, "speed": 112.67684605395004, "last": 1792582851587, "used": 63672, "size": 1000000, "active": false}, {"id": "demo-06", "title": "优化订单查询慢 SQL", "cwd": "~/WorkBuddy/order-center", "model": "DeepSeek-V4.1-Flash", "tokens": 11508464, "in": 11455334, "out": 53130, "calls": 67, "hit_rate": 0.9594445696651009, "credit": 3.97, "speed": 107.77707003785282, "last": 1792584886923, "used": 270013, "size": 1000000, "active": true}, {"id": "demo-01", "title": "重构日志采集模块", "cwd": "~/WorkBuddy/log-pipeline", "model": "DeepSeek-V4.1-Flash", "tokens": 8288151, "in": 8237139, "out": 51012, "calls": 54, "hit_rate": 0.9598576641719898, "credit": 3.7, "speed": 112.14829992393297, "last": 1792548711923, "used": 344364, "size": 1000000, "active": false}], "recent": [{"t": 1792584886923, "model": "DeepSeek-V4.1-Flash", "in": 306217, "out": 1162, "hit": 302701, "miss": 3516, "credit": 0.082, "dur": 3200, "speed": 363.1, "tool": "Edit", "title": "优化订单查询慢 SQL"}, {"t": 1792582851587, "model": "Claude-4.5-Sonnet", "in": 279698, "out": 1032, "hit": 262903, "miss": 16795, "credit": 0.074, "dur": 13223, "speed": 78.0, "tool": "Glob", "title": "补充缓存层单元测试"}, {"t": 1792582710220, "model": "DeepSeek-V4.1-Flash", "in": 335463, "out": 169, "hit": 313795, "miss": 21668, "credit": 0.02, "dur": 3613, "speed": 46.8, "tool": "Bash", "title": "为 REST API 增加分页与限流"}, {"t": 1792582086841, "model": "Step-5-Preview", "in": 279213, "out": 897, "hit": 271381, "miss": 7832, "credit": 0.066, "dur": 7436, "speed": 120.6, "tool": "Read", "title": "整理组件库文档"}, {"t": 1792581022102, "model": "Claude-4.5-Sonnet", "in": 325417, "out": 887, "hit": 311745, "miss": 13672, "credit": 0.065, "dur": 12496, "speed": 71.0, "tool": "Bash", "title": "排查 CI 构建超时"}, {"t": 1792580644966, "model": "Step-5-Preview", "in": 254397, "out": 2042, "hit": 237159, "miss": 17238, "credit": 0.137, "dur": 12800, "speed": 159.5, "tool": "TaskCreate", "title": "整理组件库文档"}, {"t": 1792579790795, "model": "DeepSeek-V4.1-Flash", "in": 280171, "out": 1524, "hit": 272979, "miss": 7192, "credit": 0.104, "dur": 11643, "speed": 130.9, "tool": "Grep", "title": "优化订单查询慢 SQL"}, {"t": 1792579487447, "model": "DeepSeek-V4.1-Flash", "in": 256695, "out": 339, "hit": 236987, "miss": 19708, "credit": 0.031, "dur": 2482, "speed": 136.6, "tool": "Edit", "title": "优化订单查询慢 SQL"}, {"t": 1792577990396, "model": "Claude-4.5-Sonnet", "in": 296427, "out": 1286, "hit": 272929, "miss": 23498, "credit": 0.09, "dur": 10299, "speed": 124.9, "tool": "Write", "title": "补充缓存层单元测试"}, {"t": 1792577932101, "model": "DeepSeek-V4.1-Flash", "in": 235204, "out": 252, "hit": 230813, "miss": 4391, "credit": 0.026, "dur": 4659, "speed": 54.1, "tool": "Grep", "title": "优化订单查询慢 SQL"}, {"t": 1792576823950, "model": "Step-5-Preview", "in": 242466, "out": 358, "hit": 235954, "miss": 6512, "credit": 0.032, "dur": 4495, "speed": 79.6, "tool": "Edit", "title": "整理组件库文档"}, {"t": 1792576573708, "model": "DeepSeek-V4.1-Flash", "in": 331087, "out": 814, "hit": 324572, "miss": 6515, "credit": 0.06, "dur": 7304, "speed": 111.4, "tool": "Write", "title": "为 REST API 增加分页与限流"}, {"t": 1792575947644, "model": "Step-5-Preview", "in": 298850, "out": 839, "hit": 285395, "miss": 13455, "credit": 0.062, "dur": 8555, "speed": 98.1, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792575488411, "model": "DeepSeek-V4.1-Flash", "in": 236650, "out": 780, "hit": 218663, "miss": 17987, "credit": 0.058, "dur": 6264, "speed": 124.5, "tool": "TaskCreate", "title": "优化订单查询慢 SQL"}, {"t": 1792573926979, "model": "Claude-4.5-Sonnet", "in": 278671, "out": 1398, "hit": 266582, "miss": 12089, "credit": 0.097, "dur": 10055, "speed": 139.0, "tool": "Read", "title": "排查 CI 构建超时"}, {"t": 1792573374728, "model": "DeepSeek-V4.1-Flash", "in": 222390, "out": 140, "hit": 205082, "miss": 17308, "credit": 0.019, "dur": 4137, "speed": 33.8, "tool": "Write", "title": "优化订单查询慢 SQL"}, {"t": 1792572719865, "model": "Claude-4.5-Sonnet", "in": 229443, "out": 1051, "hit": 219361, "miss": 10082, "credit": 0.075, "dur": 9654, "speed": 108.9, "tool": "Glob", "title": "补充缓存层单元测试"}, {"t": 1792570996096, "model": "Step-5-Preview", "in": 245578, "out": 140, "hit": 233576, "miss": 12002, "credit": 0.019, "dur": 4078, "speed": 34.3, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792570959694, "model": "Claude-4.5-Sonnet", "in": 310925, "out": 251, "hit": 295920, "miss": 15005, "credit": 0.026, "dur": 3923, "speed": 64.0, "tool": "Grep", "title": "排查 CI 构建超时"}, {"t": 1792570826049, "model": "DeepSeek-V4.1-Flash", "in": 303606, "out": 1150, "hit": 301921, "miss": 1685, "credit": 0.081, "dur": 9168, "speed": 125.4, "tool": "Edit", "title": "为 REST API 增加分页与限流"}, {"t": 1792570276981, "model": "Step-5-Preview", "in": 287802, "out": 812, "hit": 285388, "miss": 2414, "credit": 0.06, "dur": 8121, "speed": 100.0, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792569734959, "model": "DeepSeek-V4.1-Flash", "in": 288527, "out": 1142, "hit": 278811, "miss": 9716, "credit": 0.081, "dur": 11280, "speed": 101.2, "tool": "Write", "title": "优化订单查询慢 SQL"}, {"t": 1792569630425, "model": "DeepSeek-V4.1-Flash", "in": 302477, "out": 852, "hit": 281554, "miss": 20923, "credit": 0.063, "dur": 6880, "speed": 123.8, "tool": "Glob", "title": "为 REST API 增加分页与限流"}, {"t": 1792568829155, "model": "DeepSeek-V4.1-Flash", "in": 291630, "out": 774, "hit": 287571, "miss": 4059, "credit": 0.058, "dur": 6118, "speed": 126.5, "tool": "Grep", "title": "优化订单查询慢 SQL"}], "status": {"files": 6, "records": 423, "last_scan": 1792584938923, "sessions": 6, "source": "~/.workbuddy/projects（演示数据）"}};</script>
+<script>
+/* WorkBuddy Token Monitor — 前端面板 */
+(function () {
+  "use strict";
+
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+
+  const COLORS = {
+    hit: "#06b6d4",
+    miss: "#f59e0b",
+    out: "#7c3aed",
+    line: "#6366f1",
+    grid: "#eef2f7",
+    axis: "#94a3b8",
+    ink: "#0f172a"
+  };
+  const MODEL_COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981", "#f43f5e", "#64748b"];
+  const FONT = '11px -apple-system, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+  const FONT_SM = '10px -apple-system, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+
+  const state = {
+    range: "today",
+    paused: false,
+    data: null,
+    lastUpdate: 0,
+    animate: true,
+    hover: null
+  };
+
+  /* ------------------------------------------------ 格式化 */
+
+  function compact(n) {
+    n = Number(n) || 0;
+    if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
+    if (n >= 1e4) return (n / 1e3).toFixed(1) + "K";
+    if (n >= 1e3) return (n / 1e3).toFixed(2) + "K";
+    return String(Math.round(n));
+  }
+  function intFmt(n) {
+    return Math.round(Number(n) || 0).toLocaleString("zh-CN");
+  }
+  function pct(v) {
+    return (Math.max(0, Math.min(1, Number(v) || 0)) * 100).toFixed(1) + "%";
+  }
+  function two(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+  function hhmmss(ms) {
+    const d = new Date(ms);
+    return two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds());
+  }
+  function hhmm(ms) {
+    const d = new Date(ms);
+    return two(d.getHours()) + ":" + two(d.getMinutes());
+  }
+  function ago(ms) {
+    const s = Math.max(0, (Date.now() - ms) / 1000);
+    if (s < 60) return "刚刚";
+    if (s < 3600) return Math.floor(s / 60) + " 分钟前";
+    if (s < 86400) return Math.floor(s / 3600) + " 小时前";
+    return Math.floor(s / 86400) + " 天前";
+  }
+
+  /* ------------------------------------------------ 数字动画 */
+
+  const tweens = new Map();
+  function setNum(el, to, fmt) {
+    if (!el) return;
+    const from = Number(el.dataset.v || 0);
+    if (Math.abs(from - to) <= Math.max(0.4, Math.abs(to) * 0.0008)) {
+      el.dataset.v = String(to);
+      el.textContent = fmt(to);
+      return;
+    }
+    el.dataset.v = String(to);
+    const t0 = performance.now();
+    const dur = 620;
+    if (tweens.has(el)) cancelAnimationFrame(tweens.get(el));
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(from + (to - from) * e);
+      if (p < 1) tweens.set(el, requestAnimationFrame(step));
+    };
+    tweens.set(el, requestAnimationFrame(step));
+  }
+
+  /* ------------------------------------------------ canvas 基础 */
+
+  function fit(canvas) {
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(20, r.width);
+    const h = Math.max(20, r.height);
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx: ctx, w: w, h: h };
+  }
+
+  function roundTop(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h));
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+  }
+
+  function smooth(ctx, pts) {
+    if (!pts.length) return;
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      ctx.bezierCurveTo(
+        p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
+        p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
+        p2.x, p2.y
+      );
+    }
+  }
+
+  function niceMax(v) {
+    if (!v || v < 1) return 10;
+    const exp = Math.pow(10, Math.floor(Math.log10(v)));
+    const f = v / exp;
+    let m;
+    if (f <= 1) m = 1;
+    else if (f <= 2) m = 2;
+    else if (f <= 2.5) m = 2.5;
+    else if (f <= 5) m = 5;
+    else m = 10;
+    return m * exp;
+  }
+
+  /* ------------------------------------------------ tooltip */
+
+  const tipEl = $("#tip");
+  function showTip(html, x, y) {
+    tipEl.innerHTML = html;
+    tipEl.style.left = x + "px";
+    tipEl.style.top = y + "px";
+    tipEl.classList.add("show");
+  }
+  function hideTip() {
+    tipEl.classList.remove("show");
+  }
+
+  /* ------------------------------------------------ 吞吐面积图 */
+
+  function drawSpeed(canvas, series, animate) {
+    const d = fit(canvas);
+    const ctx = d.ctx, W = d.w, H = d.h;
+    const padL = 0, padR = 6, padT = 12, padB = 20;
+    const cw = W - padL - padR;
+    const ch = H - padT - padB;
+    if (!series.length) return;
+
+    const vals = series.map((s) => s.v);
+    const maxV = niceMax(Math.max.apply(null, vals.concat([10])));
+    const n = vals.length;
+    const prog = animate ? state._p || 0 : 1;
+
+    // 网格
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 3; i++) {
+      const y = padT + (ch * i) / 3;
+      ctx.beginPath();
+      ctx.moveTo(padL, y + 0.5);
+      ctx.lineTo(W - padR, y + 0.5);
+      ctx.stroke();
+    }
+    // y 轴文字
+    ctx.fillStyle = COLORS.axis;
+    ctx.font = FONT_SM;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(compact(maxV), padL + 2, padT + 2);
+    ctx.fillText("0", padL + 2, padT + ch - 2);
+
+    const pts = vals.map((v, i) => ({
+      x: padL + (cw * i) / Math.max(1, n - 1),
+      y: padT + ch - (ch * Math.min(v, maxV) / maxV) * prog
+    }));
+
+    // 面积
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
+    grad.addColorStop(0, "rgba(99,102,241,.26)");
+    grad.addColorStop(0.55, "rgba(124,58,237,.10)");
+    grad.addColorStop(1, "rgba(124,58,237,0)");
+    ctx.beginPath();
+    smooth(ctx, pts);
+    ctx.lineTo(pts[pts.length - 1].x, padT + ch);
+    ctx.lineTo(pts[0].x, padT + ch);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 线
+    const lg = ctx.createLinearGradient(padL, 0, W, 0);
+    lg.addColorStop(0, "#6366f1");
+    lg.addColorStop(1, "#a855f7");
+    ctx.beginPath();
+    smooth(ctx, pts);
+    ctx.strokeStyle = lg;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // 末端光点
+    const last = pts[pts.length - 1];
+    if (last) {
+      const glow = ctx.createRadialGradient(last.x, last.y, 0, last.x, last.y, 12);
+      glow.addColorStop(0, "rgba(139,92,246,.35)");
+      glow.addColorStop(1, "rgba(139,92,246,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(last.x, last.y, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#8b5cf6";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(last.x, last.y, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // x 轴
+    ctx.fillStyle = COLORS.axis;
+    ctx.font = FONT_SM;
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillText("-60 分钟", padL + 2, padT + ch + 6);
+    ctx.textAlign = "right";
+    ctx.fillText("现在", W - padR, padT + ch + 6);
+
+    canvas._hit = { pts: pts, series: series, padT: padT, ch: ch, W: W, padR: padR };
+  }
+
+  /* ------------------------------------------------ 堆叠柱 */
+
+  function drawUsage(canvas, buckets, animate) {
+    const d = fit(canvas);
+    const ctx = d.ctx, W = d.w, H = d.h;
+    const padL = 38, padR = 4, padT = 10, padB = 20;
+    const cw = W - padL - padR;
+    const ch = H - padT - padB;
+    const n = buckets.length;
+    if (!n) return;
+
+    const totals = buckets.map((b) => b.hit + b.miss + b.out);
+    const maxV = niceMax(Math.max.apply(null, totals.concat([1])));
+    const prog = animate ? state._p || 0 : 1;
+
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 1;
+    ctx.font = FONT_SM;
+    ctx.textBaseline = "middle";
+    for (let i = 0; i <= 3; i++) {
+      const y = padT + (ch * i) / 3;
+      ctx.beginPath();
+      ctx.moveTo(padL, y + 0.5);
+      ctx.lineTo(W - padR, y + 0.5);
+      ctx.stroke();
+      const val = maxV - (maxV * i) / 3;
+      ctx.fillStyle = COLORS.axis;
+      ctx.textAlign = "right";
+      ctx.fillText(compact(val), padL - 6, y);
+    }
+
+    const slot = cw / n;
+    const bw = Math.max(2.5, Math.min(26, slot * 0.62));
+    const hitTop = [];
+    const baseY = padT + ch;
+
+    for (let i = 0; i < n; i++) {
+      const b = buckets[i];
+      const x = padL + slot * i + (slot - bw) / 2;
+      const h1 = (ch * b.hit / maxV) * prog;
+      const h2 = (ch * b.miss / maxV) * prog;
+      const h3 = (ch * b.out / maxV) * prog;
+
+      let y = baseY;
+      if (h1 > 0.4) {
+        ctx.fillStyle = "rgba(6,182,212,.78)";
+        ctx.fillRect(x, y - h1, bw, h1);
+        y -= h1;
+      }
+      if (h2 > 0.4) {
+        ctx.fillStyle = "rgba(245,158,11,.85)";
+        ctx.fillRect(x, y - h2, bw, h2);
+        y -= h2;
+      }
+      if (h3 > 0.4) {
+        ctx.fillStyle = "rgba(124,58,237,.9)";
+        roundTop(ctx, x, y - h3, bw, h3, Math.min(3, bw / 2));
+        ctx.fill();
+        y -= h3;
+      } else if (h1 + h2 > 0.4) {
+        ctx.fillStyle = "rgba(6,182,212,.78)";
+        roundTop(ctx, x, y, bw, 2, 1);
+        ctx.fill();
+      }
+      hitTop.push({ x: x, w: bw, y: y, b: b, cx: padL + slot * i + slot / 2 });
+    }
+
+    // x 标签
+    ctx.fillStyle = COLORS.axis;
+    ctx.font = FONT_SM;
+    ctx.textBaseline = "top";
+    const step = Math.max(1, Math.ceil(n / 8));
+    for (let i = 0; i < n; i += step) {
+      const cx = padL + slot * i + slot / 2;
+      ctx.textAlign = "center";
+      ctx.fillText(buckets[i].label, cx, baseY + 6);
+    }
+
+    canvas._hit = { bars: hitTop, baseY: baseY, slot: slot };
+  }
+
+  /* ------------------------------------------------ 命中率折线 */
+
+  function drawCache(canvas, buckets, animate) {
+    const d = fit(canvas);
+    const ctx = d.ctx, W = d.w, H = d.h;
+    const padL = 30, padR = 8, padT = 12, padB = 20;
+    const cw = W - padL - padR;
+    const ch = H - padT - padB;
+    const n = buckets.length;
+    if (!n) return;
+
+    const prog = animate ? state._p || 0 : 1;
+
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 1;
+    ctx.font = FONT_SM;
+    ctx.textBaseline = "middle";
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (ch * i) / 4;
+      ctx.beginPath();
+      ctx.moveTo(padL, y + 0.5);
+      ctx.lineTo(W - padR, y + 0.5);
+      ctx.stroke();
+      ctx.fillStyle = COLORS.axis;
+      ctx.textAlign = "right";
+      ctx.fillText((100 - i * 25) + "%", padL - 6, y);
+    }
+
+    // 80% 参考线
+    const y80 = padT + ch * (1 - 0.8);
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "rgba(16,185,129,.45)";
+    ctx.beginPath();
+    ctx.moveTo(padL, y80);
+    ctx.lineTo(W - padR, y80);
+    ctx.stroke();
+    ctx.restore();
+
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const b = buckets[i];
+      const denom = b.hit + b.miss;
+      const x = padL + (cw * (i + 0.5)) / n;
+      if (!denom) {
+        pts.push(null);
+        continue;
+      }
+      const r = b.hit / denom;
+      const y = padT + ch - ch * r * prog;
+      pts.push({ x: x, y: y, r: r, b: b });
+    }
+
+    // 分段绘制（空桶断开）
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#10b981";
+    let seg = [];
+    const flush = () => {
+      if (seg.length > 1) {
+        ctx.beginPath();
+        smooth(ctx, seg);
+        ctx.stroke();
+
+        const g = ctx.createLinearGradient(0, padT, 0, padT + ch);
+        g.addColorStop(0, "rgba(16,185,129,.18)");
+        g.addColorStop(1, "rgba(16,185,129,0)");
+        ctx.beginPath();
+        smooth(ctx, seg);
+        ctx.lineTo(seg[seg.length - 1].x, padT + ch);
+        ctx.lineTo(seg[0].x, padT + ch);
+        ctx.closePath();
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+      seg = [];
+    };
+    for (let i = 0; i < pts.length; i++) {
+      if (pts[i]) seg.push(pts[i]);
+      else flush();
+    }
+    flush();
+
+    // 数据点
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      if (!p) continue;
+      if (n > 40 && i % 3 !== 0) continue;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = COLORS.axis;
+    ctx.font = FONT_SM;
+    ctx.textBaseline = "top";
+    const step = Math.max(1, Math.ceil(n / 8));
+    for (let i = 0; i < n; i += step) {
+      const x = padL + (cw * (i + 0.5)) / n;
+      ctx.textAlign = "center";
+      ctx.fillText(buckets[i].label, x, padT + ch + 6);
+    }
+
+    canvas._hit = { pts: pts, padL: padL, cw: cw, n: n, padT: padT, ch: ch };
+  }
+
+  /* ------------------------------------------------ 环形图 */
+
+  function drawDonut(canvas, models, animate) {
+    const d = fit(canvas);
+    const ctx = d.ctx, W = d.w, H = d.h;
+    const cx = W / 2, cy = H / 2;
+    const R = Math.min(W, H) / 2 - 6;
+    const r = R * 0.66;
+    const total = models.reduce((s, m) => s + m.tokens, 0);
+
+    if (!total) {
+      ctx.strokeStyle = "#eef2f7";
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.arc(cx, cy, (R + r) / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      return;
+    }
+
+    const prog = animate ? state._p || 0 : 1;
+    let a0 = -Math.PI / 2;
+    models.forEach((m, i) => {
+      const frac = m.tokens / total;
+      const a1 = a0 + frac * Math.PI * 2 * prog;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, a0, a1);
+      ctx.arc(cx, cy, r, a1, a0, true);
+      ctx.closePath();
+      ctx.fillStyle = MODEL_COLORS[i % MODEL_COLORS.length];
+      ctx.fill();
+      a0 = a1;
+    });
+
+    // 内圈阴影
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+
+    canvas._hit = { donut: true, cx: cx, cy: cy, R: R, r: r, models: models, total: total };
+  }
+
+  /* ------------------------------------------------ hover */
+
+  function bindHover(canvas, kind) {
+    canvas.addEventListener("mousemove", function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const hit = canvas._hit;
+      if (!hit) return;
+      const px = e.clientX, py = e.clientY;
+
+      if (kind === "speed" && hit.pts) {
+        let best = -1, bd = 1e9;
+        hit.pts.forEach((p, i) => {
+          const dd = Math.abs(p.x - x);
+          if (dd < bd) { bd = dd; best = i; }
+        });
+        if (best >= 0) {
+          const p = hit.pts[best];
+          const s = hit.series[best];
+          showTip(
+            '<span class="k">' + hhmm(s.t) + '</span><br><b>' + s.v.toFixed(1) + '</b> tok/s' +
+            (s.calls ? '<br><span class="k">' + s.calls + ' 次调用 · ' + compact(s.out) + ' tokens</span>' : '<br><span class="k">无调用</span>'),
+            px, py
+          );
+          return;
+        }
+      }
+
+      if (kind === "usage" && hit.bars) {
+        const half = (hit.slot || 12) / 2;
+        for (let i = 0; i < hit.bars.length; i++) {
+          const b = hit.bars[i];
+          if (Math.abs(x - b.cx) <= half) {
+            const bb = b.b;
+            showTip(
+              '<b>' + bb.label + '</b><br>' +
+              '<span class="k">缓存命中</span> ' + compact(bb.hit) + '<br>' +
+              '<span class="k">未命中</span> ' + compact(bb.miss) + '<br>' +
+              '<span class="k">输出</span> ' + compact(bb.out) + '<br>' +
+              '<span class="k">' + bb.calls + ' 次调用 · ' + bb.credit.toFixed(2) + ' 积分</span>',
+              b.cx + rect.left, py
+            );
+            return;
+          }
+        }
+      }
+
+      if (kind === "cache" && hit.pts) {
+        let best = null, bd = 1e9;
+        hit.pts.forEach((p) => {
+          if (!p) return;
+          const dd = Math.abs(p.x - x);
+          if (dd < bd) { bd = dd; best = p; }
+        });
+        if (best && bd < 26) {
+          showTip(
+            '<b>' + best.b.label + '</b><br>命中率 <b>' + (best.r * 100).toFixed(1) + '%</b><br>' +
+            '<span class="k">命中 ' + compact(best.b.hit) + ' / 未命中 ' + compact(best.b.miss) + '</span>',
+            best.x + rect.left, py
+          );
+          return;
+        }
+      }
+
+      if (kind === "donut" && hit.donut) {
+        const dx = x - hit.donut.cx, dy = y - hit.donut.cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist >= hit.donut.r && dist <= hit.donut.R) {
+          let ang = Math.atan2(dy, dx) + Math.PI / 2;
+          if (ang < 0) ang += Math.PI * 2;
+          let acc = 0;
+          for (let i = 0; i < hit.donut.models.length; i++) {
+            const m = hit.donut.models[i];
+            const f = m.tokens / hit.donut.total;
+            if (ang >= acc && ang < acc + f) {
+              showTip(
+                '<b>' + m.name + '</b><br>' + compact(m.tokens) + ' tokens · ' + (f * 100).toFixed(1) + '%<br>' +
+                '<span class="k">' + m.calls + ' 次调用 · 命中率 ' + pct(m.hit / (m.in || 1)) + '</span>',
+                px, py
+              );
+              return;
+            }
+            acc += f;
+          }
+        }
+      }
+
+      hideTip();
+    });
+
+    canvas.addEventListener("mouseleave", hideTip);
+  }
+
+  /* ------------------------------------------------ 渲染 */
+
+  function renderKpi(k) {
+    setNum($('[data-k="tokens"]'), k.tokens, compact);
+    $('[data-k="inout"]').textContent = "输入 " + compact(k.input) + " · 输出 " + compact(k.output);
+
+    const hr = $('[data-k="hitrate"]');
+    setNum(hr, k.hit_rate * 100, (v) => v.toFixed(1));
+    $('[data-k="hitinfo"]').textContent =
+      "命中 " + compact(k.cache_hit) + " / 未命中 " + compact(k.cache_miss);
+
+    setNum($('[data-k="speed"]'), k.avg_speed, (v) => v.toFixed(0));
+    $('[data-k="speedinfo"]').textContent = "峰值 " + k.peak_speed.toFixed(0) + " tok/s";
+
+    setNum($('[data-k="credit"]'), k.credit, (v) => v.toFixed(2));
+    $('[data-k="creditinfo"]').textContent = "今日 " + k.today_credit.toFixed(2) + " 分";
+
+    setNum($('[data-k="calls"]'), k.calls, (v) => intFmt(v));
+    const gs = k.gen_seconds || 0;
+    $('[data-k="callinfo"]').textContent =
+      "生成耗时 " + (gs >= 120 ? (gs / 60).toFixed(1) + " 分钟" : gs.toFixed(0) + " 秒");
+  }
+
+  function renderNowSpeed(data) {
+    const now = Date.now();
+    const recs = data.recent || [];
+    const recent5 = recs.filter((r) => now - r.t < 300000 && r.dur > 200);
+    let v = 0, sub = "";
+    if (recent5.length) {
+      let dsum = 0, osum = 0, c = 0;
+      recent5.forEach((r) => { dsum += r.dur; osum += r.out; c++; });
+      v = osum / (dsum / 1000);
+      sub = "最近 5 分钟 · " + c + " 次调用";
+    } else if (recs.length) {
+      sub = "空闲 · 上次 " + ago(recs[0].t);
+    } else {
+      sub = "等待记录";
+    }
+    setNum($("#now-speed"), v, (n) => n.toFixed(0));
+    $("#now-sub").textContent = sub;
+  }
+
+  function renderModels(models) {
+    const box = $("#model-legend");
+    const total = models.reduce((s, m) => s + m.tokens, 0);
+    $("#model-total").textContent = compact(total);
+    box.innerHTML = models.slice(0, 6).map((m, i) =>
+      '<li><i style="background:' + MODEL_COLORS[i % MODEL_COLORS.length] + '"></i>' +
+      '<span class="lname" title="' + esc(m.name) + '">' + esc(m.name) + "</span>" +
+      '<span class="lval">' + (total ? ((m.tokens / total) * 100).toFixed(1) : "0") + "%</span></li>"
+    ).join("");
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  function renderSessions(rows) {
+    const tb = $("#tbl-sessions tbody");
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:26px 0">当前范围还没有调用记录</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map((r, i) => {
+      const path = r.cwd ? r.cwd.replace(/^\/home\/[^/]+/, "~") : "";
+      const hr = r.hit_rate;
+      const cls = hr >= 0.9 ? "good" : hr >= 0.6 ? "mid" : "bad";
+      const hasCtx = r.used > 0 && r.size > 0;
+      const ratio = hasCtx ? Math.min(1, r.used / r.size) : 0;
+      const ctxTxt = hasCtx
+        ? compact(r.used) + " / " + compact(r.size) + " · " + (ratio * 100).toFixed(0) + "%"
+        : "—";
+      const ctxCell = hasCtx
+        ? '<div class="ctx-bar"><i style="width:' + (ratio * 100).toFixed(1) + '%"></i></div>'
+        : '<div class="ctx-bar" style="opacity:.45"></div>';
+      return '<tr>' +
+        '<td class="col-title"><div class="title-cell"><span class="rank">' + (i + 1) + "</span>" +
+        '<div style="min-width:0"><div class="t-name">' + esc(r.title) + "</div>" +
+        '<div class="t-path">' + esc(path) + "</div></div></div></td>" +
+        '<td><span class="model-chip" title="' + esc(r.model) + '">' + esc(shortModel(r.model)) + "</span></td>" +
+        '<td class="num">' + compact(r.tokens) + "</td>" +
+        '<td class="num">' + r.calls + "</td>" +
+        '<td class="num"><span class="pill ' + cls + '">' + (hr * 100).toFixed(1) + "%</span></td>" +
+        '<td class="num">' + (r.speed ? r.speed.toFixed(0) : "—") + "</td>" +
+        '<td class="num">' + (r.credit ? r.credit.toFixed(2) : "—") + "</td>" +
+        '<td class="col-ctx bar-cell">' + ctxCell +
+        '<div class="ctx-txt">' + ctxTxt + "</div></td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  function shortModel(m) {
+    if (!m) return "unknown";
+    return m.length > 18 ? m.slice(0, 17) + "…" : m;
+  }
+
+  let streamKey = "";
+  function renderStream(rows) {
+    const ul = $("#stream");
+    const key = rows.map((r) => r.t + ":" + r.out + ":" + r.in).join("|");
+    if (key === streamKey) return;
+    streamKey = key;
+    if (!rows.length) {
+      ul.innerHTML = '<li style="display:block;color:#94a3b8;padding:18px 6px">等待新的模型调用…</li>';
+      return;
+    }
+    const maxTok = Math.max.apply(null, rows.map((r) => r.in).concat([1]));
+    ul.innerHTML = rows.map((r, i) => {
+      const denom = r.hit + r.miss || 1;
+      const hp = (r.hit / denom) * 100;
+      const mp = (r.miss / denom) * 100;
+      return '<li' + (i === 0 ? ' class="fresh"' : "") + ">" +
+        '<span class="st-time">' + hhmmss(r.t) + "</span>" +
+        '<span class="st-model" title="' + esc(r.model) + '">' + esc(shortModel(r.model)) + "</span>" +
+        '<span class="st-bars"><span class="mini-bar" title="缓存命中 ' + pct(r.hit / denom) + '">' +
+        '<i style="width:' + hp.toFixed(1) + "%;background:" + COLORS.hit + '"></i>' +
+        '<i style="width:' + mp.toFixed(1) + "%;background:" + COLORS.miss + '"></i>' +
+        "</span></span>" +
+        '<span class="st-nums">' + compact(r.in) + " → " + compact(r.out) + "</span>" +
+        '<span class="st-speed' + (r.speed ? "" : " zero") + '">' +
+        (r.speed ? r.speed.toFixed(0) + " tok/s" : "—") + "</span>" +
+        "</li>";
+    }).join("");
+  }
+
+  function renderCacheNote(k) {
+    const saved = k.cache_hit;
+    const miss = k.cache_miss;
+    if (!k.tokens) {
+      $("#cache-note").textContent = "缓存让重复上下文无需重新计费";
+      return;
+    }
+    const factor = miss > 0 ? (k.input / miss) : 0;
+    $("#cache-note").textContent =
+      "命中 " + compact(saved) + " tokens，约等于减少 " + (factor ? factor.toFixed(1) + "×" : "大量") + " 的重复计算";
+  }
+
+  function render() {
+    const data = state.data;
+    if (!data) return;
+
+    renderKpi(data.kpi);
+    renderNowSpeed(data);
+    renderModels(data.models);
+    renderSessions(data.sessions);
+    renderStream(data.recent);
+    renderCacheNote(data.kpi);
+
+    $("#usage-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
+    $("#cache-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
+
+    const animate = state.animate;
+    if (animate) {
+      state._p = 0;
+      const t0 = performance.now();
+      const tick = (t) => {
+        const p = Math.min(1, (t - t0) / 520);
+        state._p = 1 - Math.pow(1 - p, 3);
+        paint();
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      state.animate = false;
+    } else {
+      paint();
+    }
+
+    $("#stream-tag").textContent = "最新 " + data.recent.length + " 次";
+    $("#foot-stat").textContent =
+      data.status.files + " 个会话文件 · " + intFmt(data.status.records) + " 条调用记录";
+    const t = new Date(data.generated_at);
+    $("#live-status").textContent = "最近更新 " + hhmmss(data.generated_at) + " · 每 2 秒自动刷新";
+  }
+
+  function paint() {
+    const data = state.data;
+    if (!data) return;
+    drawSpeed($("#chart-speed"), data.speeds, state._p !== undefined && state._p < 1);
+    drawUsage($("#chart-usage"), data.series.buckets, state._p !== undefined && state._p < 1);
+    drawCache($("#chart-cache"), data.series.buckets, state._p !== undefined && state._p < 1);
+    drawDonut($("#chart-models"), data.models, state._p !== undefined && state._p < 1);
+  }
+
+  /* ------------------------------------------------ 数据 */
+
+  async function load() {
+    if (state.paused) return;
+    try {
+      const res = await fetch("/api/snapshot?range=" + encodeURIComponent(state.range), { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      state.data = data;
+      state.lastUpdate = Date.now();
+      $("#livebadge").classList.remove("off");
+      render();
+    } catch (err) {
+      $("#livebadge").classList.add("off");
+      $("#live-status").textContent = "连接中断，正在重试…";
+    }
+  }
+
+  /* ------------------------------------------------ 事件 */
+
+  $("#range").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-range]");
+    if (!b) return;
+    $$("#range button").forEach((x) => x.classList.toggle("on", x === b));
+    state.range = b.dataset.range;
+    state.animate = true;
+    load();
+  });
+
+  $("#pause").addEventListener("click", () => {
+    state.paused = !state.paused;
+    $("#pause").style.background = state.paused ? "#f1f5f9" : "";
+    $("#livebadge").classList.toggle("off", state.paused);
+    if (!state.paused) load();
+  });
+
+  let rt = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(rt);
+    rt = setTimeout(paint, 120);
+  });
+
+  bindHover($("#chart-speed"), "speed");
+  bindHover($("#chart-usage"), "usage");
+  bindHover($("#chart-cache"), "cache");
+  bindHover($("#chart-models"), "donut");
+
+  // 启动
+  if (window.__WB_SNAPSHOT__) {
+    state.data = window.__WB_SNAPSHOT__;
+    state.animate = true;
+    render();
+    $("#live-status").textContent = "静态快照 · " + hhmmss(state.data.generated_at) + " 生成";
+    const lb = $("#livebadge");
+    lb.classList.add("off");
+    if (lb.lastChild && lb.lastChild.nodeType === 3) lb.lastChild.textContent = "快照";
+    $("#pause").style.display = "none";
+    const rg = $("#range");
+    if (rg) rg.style.display = "none";
+  } else {
+    load();
+    setInterval(load, 2000);
+  }
+})();
+
+</script>
+</body>
+</html>
