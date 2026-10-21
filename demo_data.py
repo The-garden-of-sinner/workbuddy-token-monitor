@@ -111,9 +111,9 @@ def collector():
     return c
 
 
-def snapshot(range_key="today"):
+def snapshot(range_key="today", speed_min=60):
     c = collector()
-    data = c.snapshot(range_key)
+    data = c.snapshot(range_key, speed_min)
     data["status"]["source"] = "~/.workbuddy/projects（演示数据）"
     return data
 
@@ -127,8 +127,8 @@ class DemoSource(object):
     def scan(self):
         pass
 
-    def snapshot(self, range_key):
-        data = self._c.snapshot(range_key)
+    def snapshot(self, range_key, speed_min=60):
+        data = self._c.snapshot(range_key, speed_min)
         data["status"]["source"] = "~/.workbuddy/projects（演示数据）"
         return data
 

@@ -263,7 +263,7 @@ class Collector(object):
         self.scan()
 
     # -- 聚合 ----------------------------------------------------
-    def snapshot(self, range_key):
+    def snapshot(self, range_key, speed_min=60):
         with self.lock:
             recs = sorted(self.records, key=lambda r: r["t"])
             sessions = dict(self.sessions)
@@ -291,7 +291,7 @@ class Collector(object):
         kpi["all_tokens"] = self._kpi(recs)["tokens"]
 
         series = self._series(sel, start, now, range_key)
-        speeds = self._speeds(recs, now)
+        speeds = self._speeds(recs, now, speed_min)
         models = self._models(sel)
         sess_rows = self._sessions(sel, sessions, ctx, now)
         recent = self._recent(sel, sessions)
@@ -393,26 +393,35 @@ class Collector(object):
         return {"granularity": "day", "buckets": buckets}
 
     @staticmethod
-    def _speeds(rows, now):
-        """最近 N 分钟，每分钟一个生成的 token/s 桶。"""
-        end = hour_start_ms(now) + 3600000
-        start = now - SPEED_WINDOW_MIN * 60000
-        n = SPEED_WINDOW_MIN
+    def _speeds(rows, now, minutes=60):
+        """最近 N 分钟，按粒度分桶的生成速度（tokens/s）。"""
+        minutes = max(5, int(minutes or 60))
+        if minutes <= 60:
+            bucket = 1
+        elif minutes <= 360:
+            bucket = 5
+        else:
+            bucket = 15
+
+        n = max(1, minutes // bucket)
+        span_ms = bucket * 60000
+        start = now - n * span_ms
+
         out = []
         for i in range(n):
-            t0 = start + i * 60000
-            out.append({"t": t0, "v": 0.0, "out": 0, "calls": 0, "_d": 0})
-        base = start
+            out.append({"t": start + i * span_ms, "v": 0.0, "out": 0, "calls": 0, "_d": 0})
+
         for r in rows:
-            if r["t"] < start:
+            if r["t"] < start or r["t"] > now:
                 continue
-            i = int((r["t"] - base) // 60000)
+            i = int((r["t"] - start) // span_ms)
             if 0 <= i < n:
                 b = out[i]
                 b["out"] += r["out"]
                 b["calls"] += 1
                 if r["dur"] and r["dur"] > 200:
                     b["_d"] += r["dur"]
+
         for b in out:
             b["v"] = round(b["out"] / (b["_d"] / 1000.0), 1) if b["_d"] else 0.0
             b.pop("_d", None)
@@ -559,7 +568,11 @@ class Handler(BaseHTTPRequestHandler):
             if rng not in ("today", "7d", "all"):
                 rng = "today"
             try:
-                data = COLLECTOR.snapshot(rng)
+                span = int((q.get("span") or ["60"])[0])
+            except (TypeError, ValueError):
+                span = 60
+            try:
+                data = COLLECTOR.snapshot(rng, span)
             except Exception as e:
                 return self._send(500, json.dumps({"error": str(e)}))
             return self._send(200, json.dumps(data, ensure_ascii=False))

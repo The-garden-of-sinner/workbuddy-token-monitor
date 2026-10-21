@@ -11,20 +11,42 @@ WorkBuddy 用量监视 —— 桌面面板（PyQt5 原生绘制）
     python3 qt_app.py --shot a.png   # 离屏渲染一张截图后退出
 """
 
+import json
 import math
 import os
 import re
 import sys
 import time
 
-from PyQt5.QtCore import QPointF, QRectF, QSize, Qt, QTimer
+from PyQt5.QtCore import QPointF, QProcess, QRectF, QSize, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QFont, QFontMetrics, QIcon, QLinearGradient,
                          QPainter, QPainterPath, QPen, QPixmap, QRadialGradient)
 from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel, QMainWindow,
-                             QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget)
+                             QMenu, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout,
+                             QWidget)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
+
+UI_CONF = os.path.join(BASE_DIR, ".runtime", "ui.json")
+
+
+def load_ui_scale():
+    try:
+        with open(UI_CONF, "r", encoding="utf-8") as f:
+            v = float(json.load(f).get("scale", 1.0))
+        return min(2.0, max(0.75, v))
+    except Exception:
+        return 1.0
+
+
+def save_ui_scale(v):
+    try:
+        os.makedirs(os.path.dirname(UI_CONF), exist_ok=True)
+        with open(UI_CONF, "w", encoding="utf-8") as f:
+            json.dump({"scale": round(float(v), 2)}, f)
+    except Exception:
+        pass
 import server  # noqa: E402
 
 # ---------------------------------------------------------------- 主题
@@ -45,7 +67,7 @@ EMERALD = QColor("#10b981")
 ROSE = QColor("#f43f5e")
 SLATE = QColor("#64748b")
 
-MODEL_COLORS = [INDIGO, VIOLET, CYAN, AMBER, EMERALD, ROSE, SLATE]
+MODEL_COLORS = [INDIGO, CYAN, AMBER, EMERALD, VIOLET, ROSE, SLATE]
 
 
 def F(px, weight=QFont.Normal):
@@ -212,14 +234,53 @@ class KpiCard(Card):
 # ---------------------------------------------------------------- 吞吐面积图
 
 class SpeedChart(Card):
-    def __init__(self):
+    SPANS = ((15, "15分"), (60, "1时"), (360, "6时"), (1440, "24时"))
+
+    def __init__(self, on_span=None, span=60):
         super(SpeedChart, self).__init__()
         self.series = []
         self.current = 0.0
         self.sub = "等待中"
         self.hover = -1
+        self.span = span
+        self.on_span = on_span
         self.setMouseTracking(True)
         self.setMinimumHeight(240)
+
+        self.span_btns = []
+        for mins, label in self.SPANS:
+            b = QPushButton(label, self)
+            b.setCheckable(True)
+            b.setCursor(Qt.PointingHandCursor)
+            b.setFont(F(9))
+            b.setFixedHeight(21)
+            b.setChecked(mins == span)
+            b.setStyleSheet("""
+                QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #94a3b8;
+                              border-radius: 7px; padding: 0 7px; }
+                QPushButton:hover { background: #f7f8fc; color: #475569; }
+                QPushButton:checked { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+            """)
+            b.clicked.connect(lambda _=False, m=mins: self._pick(m))
+            self.span_btns.append((mins, b))
+
+    def resizeEvent(self, e):
+        fm = QFontMetrics(F(9))
+        x = self.width() - 14
+        for mins, b in reversed(self.span_btns):
+            w = fm.width(b.text()) + 16
+            b.setFixedWidth(w)
+            x -= w
+            b.move(x, 12)
+            x -= 4
+        super(SpeedChart, self).resizeEvent(e)
+
+    def _pick(self, mins):
+        self.span = mins
+        for m, b in self.span_btns:
+            b.setChecked(m == mins)
+        if self.on_span:
+            self.on_span(mins)
 
     def set_data(self, series, current, sub):
         self.series = series
@@ -254,8 +315,7 @@ class SpeedChart(Card):
         W = self.width()
 
         txt(p, QRectF(18, 14, 200, 18), "生成吞吐", F(13, QFont.DemiBold), INK)
-        txt(p, QRectF(W - 200, 15, 182, 16), "tokens/s · 近 60 分钟", F(10), INK3,
-            Qt.AlignRight | Qt.AlignVCenter)
+        txt(p, QRectF(84, 15, 120, 16), "tokens/s", F(10), INK3)
 
         # 大字
         p.setFont(NUM(32, QFont.DemiBold))
@@ -941,7 +1001,7 @@ class StreamCard(Card):
 
             # 缓存构成条
             denom = max(1, r["hit"] + r["miss"])
-            bx, bw = 248, max(240, min(430, W - 248 - 340))
+            bx, bw = 248, max(200, W - 248 - 350)
             if bw > 30:
                 hp = bw * r["hit"] / float(denom)
                 p.setPen(Qt.NoPen)
@@ -973,10 +1033,12 @@ class StreamCard(Card):
 # ---------------------------------------------------------------- 头部
 
 class Header(QWidget):
-    def __init__(self, on_range, icon_path=None):
+    def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0):
         super(Header, self).__init__()
         self.range = "today"
         self.on_range = on_range
+        self.on_scale = on_scale
+        self.scale = scale
         self.status = "正在读取本地记录…"
         self.icon = QPixmap(icon_path) if icon_path and os.path.exists(icon_path) else None
         self.setFixedHeight(62)
@@ -1012,6 +1074,35 @@ class Header(QWidget):
             lay.addWidget(b)
         self.buttons[0][1].setChecked(True)
 
+        # 字号档位
+        self.font_btn = QPushButton("字号 ▾")
+        self.font_btn.setCursor(Qt.PointingHandCursor)
+        self.font_btn.setFixedHeight(30)
+        self.font_btn.setFont(F(11))
+        self.font_btn.setStyleSheet("""
+            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+                          border-radius: 9px; padding: 0 10px; }
+            QPushButton:hover { background: #f7f8fc; }
+            QPushButton::menu-indicator { width: 0px; }
+        """)
+        menu = QMenu(self.font_btn)
+        menu.setFont(F(11))
+        menu.setStyleSheet("""
+            QMenu { background: #ffffff; border: 1px solid #e8ecf4; border-radius: 10px;
+                    padding: 6px; }
+            QMenu::item { padding: 7px 22px 7px 14px; border-radius: 6px; color: #334155; }
+            QMenu::item:selected { background: #eef2ff; color: #4f46e5; }
+        """)
+        self.scale_actions = []
+        for label, val in (("小", 0.9), ("标准", 1.0), ("大", 1.15), ("特大", 1.32)):
+            act = menu.addAction(label)
+            act.setCheckable(True)
+            act.setChecked(abs(val - scale) < 0.02)
+            act.triggered.connect(lambda _=False, v=val: self._pick_scale(v))
+            self.scale_actions.append((val, act))
+        self.font_btn.setMenu(menu)
+        lay.addWidget(self.font_btn)
+
         self.live = QLabel("● 实时")
         self.live.setFont(F(10))
         self.live.setStyleSheet("color:#059669; background:#ecfdf5; border:1px solid #d1fae5;"
@@ -1023,6 +1114,12 @@ class Header(QWidget):
         for k, b in self.buttons:
             b.setChecked(k == key)
         self.on_range(key)
+
+    def _pick_scale(self, val):
+        for v, act in self.scale_actions:
+            act.setChecked(abs(v - val) < 0.02)
+        if self.on_scale:
+            self.on_scale(val)
 
     def set_status(self, text, ok=True):
         self.status = text
@@ -1053,6 +1150,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.collector = collector
         self.range = "today"
+        self.speed_span = 60
         self.paused = False
         self.last = None
 
@@ -1060,8 +1158,15 @@ class MainWindow(QMainWindow):
         icon = os.path.join(BASE_DIR, "web", "icon.png")
         if os.path.exists(icon):
             self.setWindowIcon(QIcon(icon))
-        self.resize(1280, 880)
-        self.setMinimumSize(1000, 640)
+        scr = QApplication.primaryScreen()
+        area = scr.availableGeometry() if scr else None
+        if area and area.width() > 200:
+            w = min(1340, int(area.width() * 0.94))
+            h = min(980, int(area.height() * 0.94))
+        else:
+            w, h = 1280, 880
+        self.resize(max(960, w), max(620, h))
+        self.setMinimumSize(min(960, w), min(620, h))
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -1083,7 +1188,7 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(22, 14, 22, 20)
         root.setSpacing(14)
 
-        self.header = Header(self._on_range, icon)
+        self.header = Header(self._on_range, icon, self._on_scale, load_ui_scale())
         root.addWidget(self.header)
 
         # KPI
@@ -1103,7 +1208,7 @@ class MainWindow(QMainWindow):
         # 图表行 1
         r1 = QHBoxLayout()
         r1.setSpacing(14)
-        self.speed_chart = SpeedChart()
+        self.speed_chart = SpeedChart(self._on_span, self.speed_span)
         self.model_card = ModelCard()
         r1.addWidget(self.speed_chart, 155)
         r1.addWidget(self.model_card, 100)
@@ -1144,12 +1249,34 @@ class MainWindow(QMainWindow):
         self.range = key
         self.refresh()
 
+    def _on_span(self, mins):
+        self.speed_span = mins
+        self.refresh()
+
+    def _on_scale(self, val):
+        save_ui_scale(val)
+        # 通过 QT_SCALE_FACTOR 整体缩放，需重启进程生效
+        args = []
+        skip = False
+        for a in sys.argv[1:]:
+            if skip:
+                skip = False
+                continue
+            if a == "--shot":
+                skip = True
+                continue
+            args.append(a)
+        QProcess.startDetached(sys.executable,
+                              [os.path.abspath(__file__)] + args,
+                              BASE_DIR)
+        QApplication.quit()
+
     def refresh(self):
         if self.paused:
             return
         try:
             self.collector.scan()
-            data = self.collector.snapshot(self.range)
+            data = self.collector.snapshot(self.range, self.speed_span)
         except Exception as e:
             self.header.set_status("读取失败：%s" % e, ok=False)
             return
@@ -1225,8 +1352,13 @@ def main():
         if i + 1 < len(sys.argv):
             shot = sys.argv[i + 1]
 
+    scale = 1.0 if shot else load_ui_scale()
+    os.environ["QT_SCALE_FACTOR"] = str(scale)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, not shot)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, not shot)
+
     app = QApplication(sys.argv)
-    app.setFont(F(11))
+    app.setFont(F(int(11 * scale)))
     if "--demo" in sys.argv:
         import demo_data
         collector = demo_data.DemoSource()

@@ -14,7 +14,7 @@
     axis: "#94a3b8",
     ink: "#0f172a"
   };
-  const MODEL_COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981", "#f43f5e", "#64748b"];
+  const MODEL_COLORS = ["#6366f1", "#06b6d4", "#f59e0b", "#10b981", "#8b5cf6", "#f43f5e", "#64748b"];
   const FONT = '11px -apple-system, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif';
   const FONT_SM = '10px -apple-system, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif';
 
