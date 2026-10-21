@@ -1,47 +1,61 @@
-# WorkBuddy 用量监视
+# Linux 端 · WorkBuddy 用量监视
 
-一个本地运行的 WorkBuddy 用量面板：实时查看 **Token 消耗、生成吞吐、缓存命中率**，
-附带积分统计与会话排行。数据全程只读留在本机，不联网、不上传。
+简体中文 | [English](README.en.md)
 
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20x86__64%20%2F%20ARM64-0f172a?logo=linux&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.8%2B-3776ab?logo=python&logoColor=white)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.14-41cd52)
 ![License](https://img.shields.io/badge/License-MIT-0f172a)
 
+> **适用平台**：Linux 桌面（x86_64 / ARM64）。已在银河麒麟、统信 UOS 等国产系统与兆芯平台上验证。
+> 不依赖 Chromium / Electron——即使浏览器内核无法启动，面板也能正常显示。
+
+一个本地运行的 WorkBuddy 用量面板：实时查看 **Token 消耗、生成吞吐、缓存命中率**，
+附带积分统计与会话排行。数据全程只读留在本机，不联网、不上传。
+
 ![面板截图](screenshot.png)
 
-## 特性
+## 功能
 
-- **零第三方依赖**（除 PyQt5）：数据采集与聚合只用 Python 标准库
-- **不依赖浏览器内核**：面板用 PyQt5 + QPainter 手绘，Chromium 起不来的机器也能正常显示
-- **增量解析**：每 1.2 秒只读会话文件新增的字节，万级记录也不卡
-- **两套界面共用一层聚合**：原生窗口与可选 Web 面板的数据口径完全一致
-- **字号四档可调**：小 / 标准 / 大 / 特大，跟随系统 DPI，选择会被记住
+- **Linux 原生**：PyQt5 + QPainter 手绘，不依赖浏览器内核，国产化环境可直接用
+- **零第三方依赖**（除 PyQt5）：采集与聚合只用 Python 标准库
+- **两种界面**：原生窗口（默认）与 Web 面板（`--web`），共用同一层聚合逻辑
+- **增量解析**：每 1.2 秒只读会话文件新增的字节，万级记录不卡
+- **字号四档可调**：小 / 标准 / 大 / 特大，跟随系统 DPI 并记住选择
 - **吞吐时间窗可切换**：15 分钟 / 1 小时 / 6 小时 / 24 小时，自动切换分桶粒度
 - **可导出快照**：一条命令生成单文件 HTML，发给别人不用装环境
 
-## 快速开始
+## 安装
+
+依赖 Python 3.8+ 与 PyQt5：
+
+```bash
+# Debian / Ubuntu / 银河麒麟 / 统信 UOS
+sudo apt install python3 python3-pyqt5
+
+# Arch / Manjaro
+sudo pacman -S python python-pyqt5
+```
 
 ```bash
 git clone git@github.com:The-garden-of-sinner/workbuddy-token-monitor.git
 cd workbuddy-token-monitor
 
-./run.sh                  # 打开原生桌面窗口
-./install.sh              # 安装桌面快捷方式 + 应用菜单项
+./run.sh          # 打开原生窗口
+./install.sh      # 安装桌面快捷方式 + 应用菜单项
 ```
 
-其他命令：
+缺少 PyQt5 时启动器会自动退回 `--web` 模式，不会直接报错退出。
 
-```bash
-./run.sh --web            # 可选：本地服务 + 浏览器（http://127.0.0.1:8791）
-./stop.sh                 # 停止 --web 模式的后台服务
-./install.sh --uninstall  # 卸载桌面入口
+## 使用
 
-python3 export_preview.py demo.html --demo   # 导出一份演示快照
-python3 qt_app.py --demo                     # 用演示数据打开面板
-```
-
-依赖：Python 3.8+、PyQt5（Debian/Ubuntu 系 `apt install python3-pyqt5`）。
-缺少 PyQt5 时启动器会自动退回 `--web` 模式。
+| 命令 | 作用 |
+| --- | --- |
+| `./run.sh` | 打开原生桌面窗口（默认） |
+| `./run.sh --web` | 启动本地服务并打开 `http://127.0.0.1:8791` |
+| `./stop.sh` | 停止 `--web` 模式的后台服务 |
+| `./install.sh` | 安装桌面快捷方式与应用菜单项 |
+| `./install.sh --uninstall` | 卸载桌面入口 |
 
 ## 界面
 
@@ -56,7 +70,7 @@ python3 qt_app.py --demo                     # 用演示数据打开面板
 | 实时调用流 | 最新 6 次调用，含输入/输出、实测速度与积分 |
 
 顶部可切换「今日 / 近 7 天 / 全部」，图表支持鼠标悬停查看明细。
-吞吐时间窗与字号调节目前只在原生窗口中提供，Web 版固定近 60 分钟、跟随浏览器缩放。
+字号与吞吐时间窗目前只在原生窗口提供，Web 版固定近 60 分钟、跟随浏览器缩放。
 
 ## 数据来源
 
@@ -67,7 +81,7 @@ python3 qt_app.py --demo                     # 用演示数据打开面板
 | `~/.workbuddy/projects/**/*.jsonl` | 每次模型调用的 `providerData.rawUsage`：`prompt_tokens`、`completion_tokens`、`prompt_cache_hit_tokens`、`credit`，以及毫秒时间戳 |
 | `~/.workbuddy/workbuddy.db` | `sessions`（会话标题、模型、上下文窗口）、`session_usage`（当前上下文占用） |
 
-两者都用只读方式打开；数据库不可用时自动降级，只显示 jsonl 里的信息。
+两者都以只读方式打开；数据库不可用时自动降级，只显示 jsonl 里的信息。
 
 ### 指标口径
 
@@ -79,10 +93,23 @@ python3 qt_app.py --demo                     # 用演示数据打开面板
   KPI 的平均值按耗时加权，不是简单平均。
 - **积分** = 记录中 `rawUsage.credit` 的累加，仅统计本地有记录的部分。
 
+## 桌面端为什么不用浏览器内核
+
+项目**同时提供 Web 版**（`web/` 目录，原生 Canvas 实现），它只是可选的查看方式。
+桌面窗口走的是 Qt 原生绘制，原因有三：
+
+- 在兆芯等平台上，Chromium / Firefox / Electron 启动即崩溃（SIGTRAP），
+  `chrome --app` 这类"网页套壳"方案直接失效；
+- 这类环境恰恰是国产化替代的主战场，工具打不开等于没有；
+- Qt 是原生 C++ 绘制，不依赖 GPU 与浏览器沙箱，兼容性更好。
+
+代价是图表要手写（`QPainter`）。所以两套界面共用 `server.py` 的聚合结果，
+保证指标口径完全一致。
+
 ## 文件结构
 
 ```
-token-monitor/
+workbuddy-token-monitor/
 ├── qt_app.py           桌面面板（PyQt5，QPainter 手绘图表）
 ├── server.py           数据采集与聚合（标准库）+ 可选 HTTP 服务
 ├── demo_data.py        演示数据（截图与文档示例使用，不读磁盘）
@@ -97,6 +124,7 @@ token-monitor/
 ├── preview.html        演示快照（可直接用浏览器打开）
 ├── make_icon.py        重新生成图标
 ├── screenshot.png      面板截图（演示数据）
+├── README.en.md        English README
 └── LICENSE             MIT
 ```
 
@@ -127,11 +155,15 @@ python3 qt_app.py --shot out.png --range all   # 离屏渲染截图
 
 **占资源吗？** 窗口关闭后进程退出；后台仅 `--web` 模式常驻（约 30 MB）。
 
-## 为什么不用 Web 技术做窗口
+## 开发
 
-在部分国产平台（如兆芯 + 麒麟）上，Chromium / Firefox / Electron 启动即崩溃，
-`chrome --app` 这类方案直接失效。Qt 是原生 C++ 绘制，兼容性更好；
-同时面板仍保留了 Web 实现，浏览器可用的机器上体验一致。
+```bash
+python3 qt_app.py --demo                      # 用演示数据打开，不读本地记录
+python3 qt_app.py --shot out.png --range all  # 离屏渲染截图
+python3 export_preview.py demo.html --demo    # 导出单文件快照
+```
+
+演示数据在 `demo_data.py`，会话名与数值均为虚构，用于截图和文档，不接触真实数据。
 
 ## 许可证
 
