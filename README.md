@@ -22,7 +22,8 @@
 ## 快速开始
 
 ```bash
-git clone <repo-url> && cd token-monitor
+git clone git@github.com:The-garden-of-sinner/workbuddy-token-monitor.git
+cd workbuddy-token-monitor
 
 ./run.sh                  # 打开原生桌面窗口
 ./install.sh              # 安装桌面快捷方式 + 应用菜单项
