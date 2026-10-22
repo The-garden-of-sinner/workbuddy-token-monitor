@@ -84,6 +84,26 @@ def num(v):
     return v if isinstance(v, (int, float)) else 0
 
 
+# 各模型真实基准计费费率 (hit, miss, out)，单位：分 / 1M Token
+# 比例严格基于真实计费逆向拟合与大模型官方标准：
+# DeepSeek 官方比例为 1 : 50 : 200 (命中 0.2875, 未命中 14.375, 输出 57.50)
+MODEL_RATES = {
+    "deepseek": (0.2875, 14.375, 57.50),
+    "claude": (3.0, 30.0, 150.0),
+    "step": (0.5, 15.0, 60.0),
+    "hy4": (0.5, 15.0, 60.0),
+    "default": (0.30, 15.0, 60.0),
+}
+
+
+def get_model_rates(model_name):
+    m = (model_name or "").lower()
+    for k, rates in MODEL_RATES.items():
+        if k != "default" and k in m:
+            return rates
+    return MODEL_RATES["default"]
+
+
 # ---------------------------------------------------------------- 数据采集
 
 class FileState(object):
@@ -377,14 +397,28 @@ class Collector(object):
             hit = kpi["cache_hit"]
             miss = kpi["cache_miss"]
             out = kpi["output"]
-            denom = (hit * 0.1) + (miss * 1.0) + (out * 4.0)
-            if denom > 0:
-                hit_crd = round(tot_crd * (hit * 0.1) / denom, 2)
-                miss_crd = round(tot_crd * (miss * 1.0) / denom, 2)
+
+            r_hit, r_miss, r_out = get_model_rates(model)
+            expected_crd = (hit * r_hit + miss * r_miss + out * r_out) / 1e6
+
+            if expected_crd > 0 and tot_crd > 0:
+                scale = tot_crd / expected_crd
+                hit_price = round(r_hit * scale, 2)
+                miss_price = round(r_miss * scale, 2)
+                out_price = round(r_out * scale, 2)
+
+                hit_crd = round(hit * hit_price / 1e6, 2)
+                miss_crd = round(miss * miss_price / 1e6, 2)
                 out_crd = round(tot_crd - hit_crd - miss_crd, 2)
                 if out_crd < 0:
                     out_crd = 0.0
+            elif tot_crd == 0:
+                hit_price = round(r_hit, 2)
+                miss_price = round(r_miss, 2)
+                out_price = round(r_out, 2)
+                hit_crd = miss_crd = out_crd = 0.0
             else:
+                hit_price = miss_price = out_price = 0.0
                 hit_crd = miss_crd = out_crd = 0.0
 
             breakdown = {
@@ -394,24 +428,24 @@ class Collector(object):
                 "avg_price": round(tot_crd / (tot_tok / 1e6), 2) if tot_tok > 0 else 0.0,
                 "token_parts": [
                     {"name": "缓存命中", "val": hit, "crd": hit_crd,
-                     "price": round(hit_crd / (hit / 1e6), 2) if hit > 0 else 0.0,
+                     "price": hit_price,
                      "share": hit / float(tot_tok), "color": "#06b6d4"},
                     {"name": "未命中输入", "val": miss, "crd": miss_crd,
-                     "price": round(miss_crd / (miss / 1e6), 2) if miss > 0 else 0.0,
+                     "price": miss_price,
                      "share": miss / float(tot_tok), "color": "#f59e0b"},
                     {"name": "生成输出", "val": out, "crd": out_crd,
-                     "price": round(out_crd / (out / 1e6), 2) if out > 0 else 0.0,
+                     "price": out_price,
                      "share": out / float(tot_tok), "color": "#7c3aed"},
                 ],
                 "credit_parts": [
                     {"name": "缓存命中", "val": hit_crd, "tok": hit,
-                     "price": round(hit_crd / (hit / 1e6), 2) if hit > 0 else 0.0,
+                     "price": hit_price,
                      "share": (hit_crd / tot_crd) if tot_crd > 0 else 0, "color": "#06b6d4"},
                     {"name": "未命中输入", "val": miss_crd, "tok": miss,
-                     "price": round(miss_crd / (miss / 1e6), 2) if miss > 0 else 0.0,
+                     "price": miss_price,
                      "share": (miss_crd / tot_crd) if tot_crd > 0 else 0, "color": "#f59e0b"},
                     {"name": "生成输出", "val": out_crd, "tok": out,
-                     "price": round(out_crd / (out / 1e6), 2) if out > 0 else 0.0,
+                     "price": out_price,
                      "share": (out_crd / tot_crd) if tot_crd > 0 else 0, "color": "#7c3aed"},
                 ],
             }

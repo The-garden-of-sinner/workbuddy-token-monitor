@@ -88,7 +88,9 @@ def collector():
                     "hit": int(hit),
                     "miss": int(inp - hit),
                     "reason": int(out * 0.35),
-                    "credit": round(out / 10000.0 * 0.62 + 0.01, 3),
+                    "credit": round((hit * (0.2875 if "deepseek" in meta["model"].lower() else 3.0 if "claude" in meta["model"].lower() else 0.5) +
+                                     (inp - hit) * (14.375 if "deepseek" in meta["model"].lower() else 30.0 if "claude" in meta["model"].lower() else 15.0) +
+                                     out * (57.50 if "deepseek" in meta["model"].lower() else 150.0 if "claude" in meta["model"].lower() else 60.0)) / 1e6, 3),
                     "dur": int(dur),
                     "tool": rnd.choice(TOOLS),
                 })
