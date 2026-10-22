@@ -24,6 +24,7 @@ and never leaves it.
 - **Incremental parsing** — reads only newly appended bytes every 1.2 s; tens of thousands of calls stay smooth
 - **Four UI scale presets** — small / standard / large / extra large, DPI-aware and remembered
 - **Switchable throughput window** — 15 min / 1 h / 6 h / 24 h, with automatic bucket sizing
+- **Adjustable refresh interval** — 0.1 s (turbo) / 0.3 / 0.8 / 1.6 / 3 s; the fast presets go through a snapshot cache and still cost milliseconds
 - **Floating mini window** — collapse to an always-on-top card with just the key numbers; drag it anywhere, double-click to restore
 - **Snapshot export** — one command produces a self-contained HTML file you can share
 
@@ -78,6 +79,10 @@ Use the top bar to switch between **Today / Last 7 days / All**. Charts show det
 
 The mini window stays on top and can be dragged anywhere. Double-click it (or hit the arrow) to
 restore the full panel; `×` quits.
+
+The "刷新" menu switches the refresh interval. At 0.1 s, collection scans for new bytes every
+100 ms (~1.7 ms), aggregation hits the snapshot cache (~0.04 ms), and repaints are throttled to
+once per 200 ms — roughly 2% CPU.
 The scale presets and throughput window are native-window features; the web panel is fixed to
 the last 60 minutes and follows browser zoom.
 
@@ -149,7 +154,7 @@ python3 qt_app.py --demo                       # open with demo data
 python3 qt_app.py --shot out.png --range all   # offscreen render
 ```
 
-UI preferences live in `.runtime/ui.json` (currently just the scale). Delete it to reset.
+UI preferences live in `.runtime/ui.json` (scale and refresh interval). Delete it to reset.
 
 ## FAQ
 

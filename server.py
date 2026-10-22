@@ -37,6 +37,7 @@ SCAN_INTERVAL = 1.2          # 秒
 CTX_TTL = 5.0                # 数据库缓存秒数
 MAX_DAY_BUCKETS = 120        # 全部范围最多天数
 SPEED_WINDOW_MIN = 60        # 实时吞吐曲线窗口（分钟）
+CACHE_TTL_MS = 400           # 聚合结果缓存时长（毫秒）
 
 
 # ---------------------------------------------------------------- 工具函数
@@ -86,6 +87,10 @@ class Collector(object):
         self.last_scan = 0
         self.scanning = False
         self._ctx_loaded_at = 0
+        self.version = 0          # 每新增一条记录自增
+        self._cache = None
+        self._cache_key = None
+        self._cache_at = 0
 
     # -- 数据库 --------------------------------------------------
     def load_db(self):
@@ -163,6 +168,7 @@ class Collector(object):
                     if rid:
                         self.rids.add(rid)
                     self.records.append(rec)
+                    self.version += 1
 
         if typ in ("function_call_result", "message") and t:
             st.anchor = t
@@ -264,12 +270,17 @@ class Collector(object):
 
     # -- 聚合 ----------------------------------------------------
     def snapshot(self, range_key, speed_min=60):
+        now = ms_now()
+        ck = (self.version, range_key, speed_min)
+
+        # 记录未变化时复用上次聚合结果，让高频轮询只付出扫描成本
         with self.lock:
+            if self._cache_key == ck and (now - self._cache_at) < CACHE_TTL_MS:
+                return self._cache
             recs = sorted(self.records, key=lambda r: r["t"])
             sessions = dict(self.sessions)
             ctx = dict(self.ctx_usage)
 
-        now = ms_now()
         today = day_start_ms(now)
 
         if range_key == "today":
@@ -296,7 +307,7 @@ class Collector(object):
         sess_rows = self._sessions(sel, sessions, ctx, now)
         recent = self._recent(sel, sessions)
 
-        return {
+        result = {
             "generated_at": now,
             "range": range_key,
             "kpi": kpi,
@@ -313,6 +324,12 @@ class Collector(object):
                 "source": PROJECTS_DIR,
             },
         }
+
+        with self.lock:
+            self._cache = result
+            self._cache_key = ck
+            self._cache_at = now
+        return result
 
     @staticmethod
     def _kpi(rows):

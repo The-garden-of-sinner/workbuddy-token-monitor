@@ -31,22 +31,35 @@ sys.path.insert(0, BASE_DIR)
 UI_CONF = os.path.join(BASE_DIR, ".runtime", "ui.json")
 
 
-def load_ui_scale():
+def load_ui_conf():
     try:
         with open(UI_CONF, "r", encoding="utf-8") as f:
-            v = float(json.load(f).get("scale", 1.0))
-        return min(2.0, max(0.75, v))
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_ui_conf(**kv):
+    d = load_ui_conf()
+    d.update(kv)
+    try:
+        os.makedirs(os.path.dirname(UI_CONF), exist_ok=True)
+        with open(UI_CONF, "w", encoding="utf-8") as f:
+            json.dump(d, f)
+    except Exception:
+        pass
+
+
+def load_ui_scale():
+    try:
+        return min(2.0, max(0.75, float(load_ui_conf().get("scale", 1.0))))
     except Exception:
         return 1.0
 
 
 def save_ui_scale(v):
-    try:
-        os.makedirs(os.path.dirname(UI_CONF), exist_ok=True)
-        with open(UI_CONF, "w", encoding="utf-8") as f:
-            json.dump({"scale": round(float(v), 2)}, f)
-    except Exception:
-        pass
+    save_ui_conf(scale=round(float(v), 2))
 import server  # noqa: E402
 
 # ---------------------------------------------------------------- 主题
@@ -1032,13 +1045,31 @@ class StreamCard(Card):
 
 # ---------------------------------------------------------------- 头部
 
+def layers_icon(color, size=16, dpr=2.0):
+    """两个叠放圆角矩形，示意「缩成小窗」。"""
+    pm = QPixmap(int(size * dpr), int(size * dpr))
+    pm.setDevicePixelRatio(dpr)
+    pm.fill(Qt.transparent)
+    p = QPainter(pm)
+    p.setRenderHint(QPainter.Antialiasing)
+    p.setPen(QPen(color, 1.6))
+    p.setBrush(Qt.NoBrush)
+    p.drawRoundedRect(QRectF(1.2, 5.6, 8.2, 8.2), 2.3, 2.3)
+    p.drawRoundedRect(QRectF(6.8, 2.2, 8.2, 8.2), 2.3, 2.3)
+    p.end()
+    return pm
+
+
 class Header(QWidget):
-    def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0, on_mini=None):
+    def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0,
+                 on_mini=None, on_refresh=None, refresh_ms=1600):
         super(Header, self).__init__()
         self.range = "today"
         self.on_range = on_range
         self.on_scale = on_scale
         self.on_mini = on_mini
+        self.on_refresh = on_refresh
+        self.refresh_ms = refresh_ms
         self.scale = scale
         self.status = "正在读取本地记录…"
         self.icon = QPixmap(icon_path) if icon_path and os.path.exists(icon_path) else None
@@ -1075,19 +1106,53 @@ class Header(QWidget):
             lay.addWidget(b)
         self.buttons[0][1].setChecked(True)
 
-        # 切换悬浮窗
-        self.mini_btn = QPushButton("悬浮")
+        # 切换悬浮窗（用浅紫底突出，与普通按钮区分）
+        self.mini_btn = QPushButton(" 悬浮")
         self.mini_btn.setCursor(Qt.PointingHandCursor)
         self.mini_btn.setFixedHeight(30)
-        self.mini_btn.setFont(F(11))
+        self.mini_btn.setFont(F(11, QFont.DemiBold))
         self.mini_btn.setToolTip("缩成置顶小窗，随时看关键指标")
+        self.mini_btn.setIcon(QIcon(layers_icon(QColor("#4f46e5"))))
+        self.mini_btn.setIconSize(QSize(15, 15))
         self.mini_btn.setStyleSheet("""
-            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
-                          border-radius: 9px; padding: 0 10px; }
-            QPushButton:hover { background: #f7f8fc; }
+            QPushButton { border: 1px solid #c7d2fe; background: #eef2ff; color: #4f46e5;
+                          border-radius: 9px; padding: 0 11px 0 7px; }
+            QPushButton:hover { background: #e0e7ff; border-color: #a5b4fc; }
+            QPushButton:pressed { background: #c7d2fe; }
         """)
         self.mini_btn.clicked.connect(lambda: self.on_mini and self.on_mini())
         lay.addWidget(self.mini_btn)
+
+        # 刷新频率
+        self.refresh_btn = QPushButton("刷新 ▾")
+        self.refresh_btn.setCursor(Qt.PointingHandCursor)
+        self.refresh_btn.setFixedHeight(30)
+        self.refresh_btn.setFont(F(11))
+        self.refresh_btn.setToolTip("刷新间隔，越短越灵敏，也越费 CPU")
+        self.refresh_btn.setStyleSheet("""
+            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+                          border-radius: 9px; padding: 0 10px; }
+            QPushButton:hover { background: #f7f8fc; }
+            QPushButton::menu-indicator { image: none; width: 0px; }
+        """)
+        rmenu = QMenu(self.refresh_btn)
+        rmenu.setFont(F(11))
+        rmenu.setStyleSheet("""
+            QMenu { background: #ffffff; border: 1px solid #e8ecf4; border-radius: 10px;
+                    padding: 6px; }
+            QMenu::item { padding: 7px 22px 7px 14px; border-radius: 6px; color: #334155; }
+            QMenu::item:selected { background: #eef2ff; color: #4f46e5; }
+        """)
+        self.refresh_actions = []
+        for label, ms in (("0.1 秒（极速）", 100), ("0.3 秒", 300), ("0.8 秒", 800),
+                          ("1.6 秒（默认）", 1600), ("3 秒（省电）", 3000)):
+            act = rmenu.addAction(label)
+            act.setCheckable(True)
+            act.setChecked(ms == refresh_ms)
+            act.triggered.connect(lambda _=False, v=ms: self._pick_refresh(v))
+            self.refresh_actions.append((ms, act))
+        self.refresh_btn.setMenu(rmenu)
+        lay.addWidget(self.refresh_btn)
 
         # 字号档位
         self.font_btn = QPushButton("字号 ▾")
@@ -1098,7 +1163,7 @@ class Header(QWidget):
             QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
                           border-radius: 9px; padding: 0 10px; }
             QPushButton:hover { background: #f7f8fc; }
-            QPushButton::menu-indicator { width: 0px; }
+            QPushButton::menu-indicator { image: none; width: 0px; }
         """)
         menu = QMenu(self.font_btn)
         menu.setFont(F(11))
@@ -1136,6 +1201,13 @@ class Header(QWidget):
         if self.on_scale:
             self.on_scale(val)
 
+    def _pick_refresh(self, ms):
+        self.refresh_ms = ms
+        for v, act in self.refresh_actions:
+            act.setChecked(v == ms)
+        if self.on_refresh:
+            self.on_refresh(ms)
+
     def set_status(self, text, ok=True):
         self.status = text
         self.live.setText("● 实时" if ok else "● 暂停")
@@ -1163,13 +1235,14 @@ class Header(QWidget):
 class MiniWindow(QWidget):
     """置顶小窗：只显示关键指标，可拖动，双击还原完整面板。"""
 
-    def __init__(self, collector, on_expand, on_quit):
+    def __init__(self, collector, on_expand, on_quit, refresh_ms=1600):
         super(MiniWindow, self).__init__(None)
         self.collector = collector
         self.on_expand = on_expand
         self.on_quit = on_quit
         self.data = None
         self._drag = None
+        self.refresh_ms = int(refresh_ms)
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -1188,8 +1261,13 @@ class MiniWindow(QWidget):
         self.timer.timeout.connect(self.refresh)
 
     # -- 数据
+    def set_refresh(self, ms):
+        self.refresh_ms = int(ms)
+        if self.timer.isActive():
+            self.timer.start(self.refresh_ms)
+
     def showEvent(self, e):
-        self.timer.start(2000)
+        self.timer.start(self.refresh_ms)
         self.refresh()
         super(MiniWindow, self).showEvent(e)
 
@@ -1341,6 +1419,14 @@ class MainWindow(QMainWindow):
         self.last = None
         self.mini = None
 
+        conf = load_ui_conf()
+        try:
+            self.refresh_ms = max(80, int(conf.get("refresh_ms", 1600)))
+        except Exception:
+            self.refresh_ms = 1600
+        self._last_paint = 0.0
+        self._last_version = -1
+
         self.setWindowTitle("WorkBuddy 用量监视")
         icon = os.path.join(BASE_DIR, "web", "icon.png")
         if os.path.exists(icon):
@@ -1376,7 +1462,7 @@ class MainWindow(QMainWindow):
         root.setSpacing(14)
 
         self.header = Header(self._on_range, icon, self._on_scale, load_ui_scale(),
-                             self._toggle_mini)
+                             self._toggle_mini, self._on_refresh, self.refresh_ms)
         root.addWidget(self.header)
 
         # KPI
@@ -1429,7 +1515,7 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(1600)
+        self.timer.start(self.refresh_ms)
 
         self.refresh()
 
@@ -1441,10 +1527,19 @@ class MainWindow(QMainWindow):
         self.speed_span = mins
         self.refresh()
 
+    def _on_refresh(self, ms):
+        self.refresh_ms = max(80, int(ms))
+        self.timer.start(self.refresh_ms)
+        save_ui_conf(refresh_ms=self.refresh_ms)
+        if self.mini is not None:
+            self.mini.set_refresh(self.refresh_ms)
+        self.refresh()
+
     # ---- 悬浮窗
     def _toggle_mini(self):
         if self.mini is None:
-            self.mini = MiniWindow(self.collector, self._back_from_mini, QApplication.quit)
+            self.mini = MiniWindow(self.collector, self._back_from_mini, QApplication.quit,
+                                   self.refresh_ms)
             scr = QApplication.primaryScreen()
             area = scr.availableGeometry() if scr else None
             if area:
@@ -1497,6 +1592,15 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.header.set_status("读取失败：%s" % e, ok=False)
             return
+
+        # 数据没变化且刚画过，跳过整轮重绘（高频刷新时省 CPU）
+        ver = getattr(self.collector, "version", 0)
+        now_t = time.time()
+        if ver == self._last_version and (now_t - self._last_paint) < 0.2:
+            return
+        self._last_paint = now_t
+        self._last_version = ver
+
         self.last = data
         k = data["kpi"]
 
