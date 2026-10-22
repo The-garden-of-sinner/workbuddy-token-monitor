@@ -24,6 +24,7 @@ and never leaves it.
 - **Incremental parsing** — reads only newly appended bytes every 1.2 s; tens of thousands of calls stay smooth
 - **Four UI scale presets** — small / standard / large / extra large, DPI-aware and remembered
 - **Switchable throughput window** — 15 min / 1 h / 6 h / 24 h, with automatic bucket sizing
+- **Floating mini window** — collapse to an always-on-top card with just the key numbers; drag it anywhere, double-click to restore
 - **Snapshot export** — one command produces a self-contained HTML file you can share
 
 ## Install
@@ -69,8 +70,14 @@ If PyQt5 is missing, the launcher falls back to `--web` instead of failing.
 | Cache hit rate | Per-bucket hit-rate line with an 80% reference |
 | Sessions | Tokens, calls, hit rate, speed, credits and context usage per session |
 | Live calls | The latest 6 calls with input/output, measured speed and credits |
+| Mini window | The "悬浮" button collapses everything into a 326×158 always-on-top card: live speed, today's tokens, a mini throughput curve, hit rate and credits |
 
 Use the top bar to switch between **Today / Last 7 days / All**. Charts show details on hover.
+
+<img src="screenshot-mini.png" width="374" alt="Mini window">
+
+The mini window stays on top and can be dragged anywhere. Double-click it (or hit the arrow) to
+restore the full panel; `×` quits.
 The scale presets and throughput window are native-window features; the web panel is fixed to
 the last 60 minutes and follows browser zoom.
 
@@ -128,6 +135,7 @@ workbuddy-token-monitor/
 ├── preview.html        Demo snapshot (open directly in a browser)
 ├── make_icon.py        Regenerates the icon
 ├── screenshot.png      Dashboard screenshot (demo data)
+├── screenshot-mini.png Mini window screenshot
 ├── README.md           简体中文
 └── LICENSE             MIT
 ```

@@ -23,6 +23,7 @@
 - **增量解析**：每 1.2 秒只读会话文件新增的字节，万级记录不卡
 - **字号四档可调**：小 / 标准 / 大 / 特大，跟随系统 DPI 并记住选择
 - **吞吐时间窗可切换**：15 分钟 / 1 小时 / 6 小时 / 24 小时，自动切换分桶粒度
+- **悬浮小窗**：一键缩成置顶小卡片，只留关键指标，可拖动、双击还原
 - **可导出快照**：一条命令生成单文件 HTML，发给别人不用装环境
 
 ## 安装
@@ -68,8 +69,13 @@ cd workbuddy-token-monitor
 | 缓存命中率 | 按时间桶的命中率折线，80% 参考线 |
 | 会话排行 | 各会话的 token、调用数、命中率、速度、积分、上下文占用 |
 | 实时调用流 | 最新 6 次调用，含输入/输出、实测速度与积分 |
+| 悬浮小窗 | 顶部「悬浮」按钮缩成 326×158 的置顶卡片：实时速度、今日 Token、迷你吞吐曲线、命中率与积分 |
 
 顶部可切换「今日 / 近 7 天 / 全部」，图表支持鼠标悬停查看明细。
+
+<img src="screenshot-mini.png" width="374" alt="悬浮小窗">
+
+悬浮窗始终置顶，拖动可移动，双击或点右上角箭头回到完整面板，`×` 直接退出。
 字号与吞吐时间窗目前只在原生窗口提供，Web 版固定近 60 分钟、跟随浏览器缩放。
 
 ## 数据来源
@@ -124,6 +130,7 @@ workbuddy-token-monitor/
 ├── preview.html        演示快照（可直接用浏览器打开）
 ├── make_icon.py        重新生成图标
 ├── screenshot.png      面板截图（演示数据）
+├── screenshot-mini.png 悬浮窗截图
 ├── README.en.md        English README
 └── LICENSE             MIT
 ```
@@ -135,6 +142,7 @@ WB_MONITOR_PORT=9000 ./run.sh --web            # 换端口
 WB_HOME=/path/to/.workbuddy ./run.sh           # 指向其他数据目录
 python3 qt_app.py --demo                       # 用演示数据打开
 python3 qt_app.py --shot out.png --range all   # 离屏渲染截图
+python3 qt_app.py --shot-mini mini.png         # 只渲染悬浮窗
 ```
 
 界面偏好写在 `.runtime/ui.json`（目前只有字号），删掉即恢复默认。

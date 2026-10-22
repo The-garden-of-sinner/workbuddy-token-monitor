@@ -21,9 +21,9 @@ import time
 from PyQt5.QtCore import QPointF, QProcess, QRectF, QSize, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QFont, QFontMetrics, QIcon, QLinearGradient,
                          QPainter, QPainterPath, QPen, QPixmap, QRadialGradient)
-from PyQt5.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel, QMainWindow,
-                             QMenu, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout,
-                             QWidget)
+from PyQt5.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
+                             QLabel, QMainWindow, QMenu, QPushButton, QScrollArea,
+                             QSizePolicy, QVBoxLayout, QWidget)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -1033,11 +1033,12 @@ class StreamCard(Card):
 # ---------------------------------------------------------------- 头部
 
 class Header(QWidget):
-    def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0):
+    def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0, on_mini=None):
         super(Header, self).__init__()
         self.range = "today"
         self.on_range = on_range
         self.on_scale = on_scale
+        self.on_mini = on_mini
         self.scale = scale
         self.status = "正在读取本地记录…"
         self.icon = QPixmap(icon_path) if icon_path and os.path.exists(icon_path) else None
@@ -1073,6 +1074,20 @@ class Header(QWidget):
             self.buttons.append((key, b))
             lay.addWidget(b)
         self.buttons[0][1].setChecked(True)
+
+        # 切换悬浮窗
+        self.mini_btn = QPushButton("悬浮")
+        self.mini_btn.setCursor(Qt.PointingHandCursor)
+        self.mini_btn.setFixedHeight(30)
+        self.mini_btn.setFont(F(11))
+        self.mini_btn.setToolTip("缩成置顶小窗，随时看关键指标")
+        self.mini_btn.setStyleSheet("""
+            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+                          border-radius: 9px; padding: 0 10px; }
+            QPushButton:hover { background: #f7f8fc; }
+        """)
+        self.mini_btn.clicked.connect(lambda: self.on_mini and self.on_mini())
+        lay.addWidget(self.mini_btn)
 
         # 字号档位
         self.font_btn = QPushButton("字号 ▾")
@@ -1143,6 +1158,177 @@ class Header(QWidget):
         p.end()
 
 
+# ---------------------------------------------------------------- 悬浮小窗
+
+class MiniWindow(QWidget):
+    """置顶小窗：只显示关键指标，可拖动，双击还原完整面板。"""
+
+    def __init__(self, collector, on_expand, on_quit):
+        super(MiniWindow, self).__init__(None)
+        self.collector = collector
+        self.on_expand = on_expand
+        self.on_quit = on_quit
+        self.data = None
+        self._drag = None
+
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFixedSize(326, 158)
+        self.setWindowTitle("WorkBuddy 用量")
+        self.setCursor(Qt.OpenHandCursor)
+        self.setToolTip("拖动可移动，双击展开完整面板")
+
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(26)
+        shadow.setColor(QColor(15, 23, 42, 78))
+        shadow.setOffset(0, 5)
+        self.setGraphicsEffect(shadow)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.refresh)
+
+    # -- 数据
+    def showEvent(self, e):
+        self.timer.start(2000)
+        self.refresh()
+        super(MiniWindow, self).showEvent(e)
+
+    def hideEvent(self, e):
+        self.timer.stop()
+        super(MiniWindow, self).hideEvent(e)
+
+    def refresh(self):
+        try:
+            self.collector.scan()
+            self.data = self.collector.snapshot("today", 60)
+        except Exception:
+            return
+        self.update()
+
+    # -- 交互
+    def _r_expand(self):
+        return QRectF(self.width() - 64, 11, 18, 18)
+
+    def _r_close(self):
+        return QRectF(self.width() - 34, 11, 18, 18)
+
+    def mousePressEvent(self, e):
+        if e.button() != Qt.LeftButton:
+            return
+        pos = QPointF(e.pos())
+        if self._r_close().contains(pos):
+            self.on_quit()
+            return
+        if self._r_expand().contains(pos):
+            self.on_expand()
+            return
+        self._drag = e.globalPos() - self.frameGeometry().topLeft()
+        self.setCursor(Qt.ClosedHandCursor)
+
+    def mouseMoveEvent(self, e):
+        if self._drag is not None and (e.buttons() & Qt.LeftButton):
+            self.move(e.globalPos() - self._drag)
+
+    def mouseReleaseEvent(self, e):
+        self._drag = None
+        self.setCursor(Qt.OpenHandCursor)
+
+    def mouseDoubleClickEvent(self, e):
+        self.on_expand()
+
+    # -- 绘制
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        W, H = self.width(), self.height()
+
+        shape = rr(QRectF(1, 1, W - 2, H - 2), 16)
+        p.fillPath(shape, QColor(255, 255, 255, 250))
+        p.setPen(QPen(QColor("#e3e8f2"), 1))
+        p.drawPath(shape)
+
+        # 标题
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(EMERALD))
+        p.drawEllipse(QPointF(18, 20), 3.2, 3.2)
+        txt(p, QRectF(27, 12, 150, 16), "WorkBuddy 用量", F(10, QFont.DemiBold), INK2)
+
+        # 展开 / 关闭
+        r = self._r_expand()
+        p.setPen(QPen(INK3, 1.3, Qt.SolidLine, Qt.RoundCap))
+        p.drawLine(QPointF(r.left() + 4, r.bottom() - 4), QPointF(r.right() - 4, r.top() + 4))
+        p.drawLine(QPointF(r.right() - 4, r.top() + 4), QPointF(r.right() - 8.5, r.top() + 4))
+        p.drawLine(QPointF(r.right() - 4, r.top() + 4), QPointF(r.right() - 4, r.top() + 8.5))
+
+        c = self._r_close()
+        p.drawLine(QPointF(c.left() + 4.5, c.top() + 4.5), QPointF(c.right() - 4.5, c.bottom() - 4.5))
+        p.drawLine(QPointF(c.right() - 4.5, c.top() + 4.5), QPointF(c.left() + 4.5, c.bottom() - 4.5))
+
+        data = self.data or {}
+        k = data.get("kpi") or {}
+        gen = data.get("generated_at") or 0
+
+        recent = [x for x in (data.get("recent") or [])
+                  if x.get("dur") and x["dur"] > 200 and gen - x["t"] < 300000]
+        speed = 0.0
+        if recent:
+            dsum = sum(x["dur"] for x in recent)
+            osum = sum(x["out"] for x in recent)
+            speed = osum / (dsum / 1000.0) if dsum else 0.0
+
+        p.setFont(NUM(30, QFont.DemiBold))
+        p.setPen(INK)
+        p.drawText(QRectF(16, 30, 120, 34), int(Qt.AlignLeft | Qt.AlignVCenter), "%.0f" % speed)
+        txt(p, QRectF(17, 63, 140, 13), "tok/s · 近 5 分钟", F(9), INK3)
+
+        txt(p, QRectF(W - 168, 31, 152, 22), compact(k.get("tokens", 0)),
+            NUM(17, QFont.DemiBold), INK, Qt.AlignRight | Qt.AlignVCenter)
+        txt(p, QRectF(W - 168, 55, 152, 13), "今日 Token", F(9), INK3,
+            Qt.AlignRight | Qt.AlignVCenter)
+
+        # 迷你吞吐曲线
+        rect = QRectF(16, 80, W - 32, 28)
+        series = data.get("speeds") or []
+        if len(series) > 1:
+            vals = [s.get("v", 0) for s in series]
+            mx = nice_max(max(vals + [10]))
+            n = len(vals)
+            pts = []
+            for i, v in enumerate(vals):
+                x = rect.left() + rect.width() * i / (n - 1.0)
+                y = rect.bottom() - rect.height() * min(v, mx) / mx
+                pts.append(QPointF(x, y))
+
+            area = smooth_path(pts)
+            area.lineTo(rect.right(), rect.bottom())
+            area.lineTo(rect.left(), rect.bottom())
+            area.closeSubpath()
+            fill = QColor(INDIGO)
+            fill.setAlpha(36)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QBrush(fill))
+            p.drawPath(area)
+
+            lg = QLinearGradient(rect.left(), 0, rect.right(), 0)
+            lg.setColorAt(0.0, INDIGO)
+            lg.setColorAt(1.0, QColor("#a855f7"))
+            p.setPen(QPen(QBrush(lg), 1.6, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            p.drawPath(smooth_path(pts))
+
+            p.setBrush(QBrush(QColor("#ffffff")))
+            p.setPen(QPen(VIOLET, 1.5))
+            p.drawEllipse(pts[-1], 2.6, 2.6)
+
+        # 分隔与底部指标
+        p.setPen(QPen(QColor("#eef2f8"), 1))
+        p.drawLine(QPointF(16, 116), QPointF(W - 16, 116))
+
+        line = "命中 %.1f%%   ·   %d 次   ·   %.1f 分" % (
+            (k.get("hit_rate") or 0) * 100, k.get("calls") or 0, k.get("credit") or 0)
+        txt(p, QRectF(16, 124, W - 32, 14), line, F(9), INK3)
+        p.end()
+
+
 # ---------------------------------------------------------------- 主窗口
 
 class MainWindow(QMainWindow):
@@ -1153,6 +1339,7 @@ class MainWindow(QMainWindow):
         self.speed_span = 60
         self.paused = False
         self.last = None
+        self.mini = None
 
         self.setWindowTitle("WorkBuddy 用量监视")
         icon = os.path.join(BASE_DIR, "web", "icon.png")
@@ -1188,7 +1375,8 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(22, 14, 22, 20)
         root.setSpacing(14)
 
-        self.header = Header(self._on_range, icon, self._on_scale, load_ui_scale())
+        self.header = Header(self._on_range, icon, self._on_scale, load_ui_scale(),
+                             self._toggle_mini)
         root.addWidget(self.header)
 
         # KPI
@@ -1252,6 +1440,35 @@ class MainWindow(QMainWindow):
     def _on_span(self, mins):
         self.speed_span = mins
         self.refresh()
+
+    # ---- 悬浮窗
+    def _toggle_mini(self):
+        if self.mini is None:
+            self.mini = MiniWindow(self.collector, self._back_from_mini, QApplication.quit)
+            scr = QApplication.primaryScreen()
+            area = scr.availableGeometry() if scr else None
+            if area:
+                self.mini.move(area.right() - self.mini.width() - 28, area.top() + 28)
+        self.mini.refresh()
+        self.mini.show()
+        self.mini.raise_()
+        self.timer.stop()
+        self.hide()
+
+    def _back_from_mini(self):
+        if self.mini is not None:
+            self.mini.hide()
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        self.timer.start()
+        self.refresh()
+
+    def closeEvent(self, e):
+        if self.mini is not None:
+            self.mini.close()
+            self.mini = None
+        super(MainWindow, self).closeEvent(e)
 
     def _on_scale(self, val):
         save_ui_scale(val)
@@ -1352,10 +1569,16 @@ def main():
         if i + 1 < len(sys.argv):
             shot = sys.argv[i + 1]
 
-    scale = 1.0 if shot else load_ui_scale()
+    shot_mini = None
+    if "--shot-mini" in sys.argv:
+        i = sys.argv.index("--shot-mini")
+        if i + 1 < len(sys.argv):
+            shot_mini = sys.argv[i + 1]
+
+    scale = 1.0 if (shot or shot_mini) else load_ui_scale()
     os.environ["QT_SCALE_FACTOR"] = str(scale)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, not shot)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, not shot)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, not (shot or shot_mini))
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, not (shot or shot_mini))
 
     app = QApplication(sys.argv)
     app.setFont(F(int(11 * scale)))
@@ -1365,6 +1588,22 @@ def main():
     else:
         collector = server.Collector()
         collector.born()
+
+    if shot_mini:
+        mini = MiniWindow(collector, lambda: None, lambda: None)
+        mini.show()
+        for _ in range(8):
+            app.processEvents()
+            time.sleep(0.05)
+        pm = mini.grab()
+        canvas = QPixmap(pm.width() + 48, pm.height() + 48)
+        canvas.fill(QColor("#f4f6fb"))
+        pp = QPainter(canvas)
+        pp.drawPixmap(24, 24, pm)
+        pp.end()
+        canvas.save(shot_mini)
+        print("saved %s  %dx%d" % (shot_mini, canvas.width(), canvas.height()))
+        return
 
     win = MainWindow(collector)
     if "--range" in sys.argv:
