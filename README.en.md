@@ -22,6 +22,9 @@ and never leaves it.
 - **Linux native** — PyQt5 with hand-drawn QPainter charts, no browser engine involved
 - **No third-party dependencies** besides PyQt5 — collection and aggregation use only the standard library
 - **Two frontends** — a native window (default) and a web panel (`--web`), sharing one aggregation layer
+- **Per-model usage & credit tracking** — breakdown token and credit shares with one-click toggling between tokens and credits; filter by single model across all charts; adaptive single-model view displays cache hits, misses, and outputs, with estimated unit prices (`cents/M tokens`) and overall weighted rate
+- **Model usage leaderboard** — dual-tab table switching between session ranking and model-level breakdown (total tokens, prompt/completion split, cache hit rate, calls, speed, credits and credit share)
+- **Flexible time queries & custom ranges** — quick presets for Today, Yesterday, Last 7 days, Last 30 days, All, plus a custom date range picker; automatic hourly (≤40h) and daily (>40h) bucket sizing
 - **Incremental parsing** — reads only newly appended bytes, at whatever pace the refresh interval sets; tens of thousands of calls stay smooth
 - **Four UI scale presets** — small / standard / large / extra large, DPI-aware and remembered
 - **Switchable throughput window** — 15 min / 1 h / 6 h / 24 h, with automatic bucket sizing
@@ -80,16 +83,16 @@ If PyQt5 is missing, the launcher falls back to `--web` instead of failing.
 
 | Area | Description |
 | --- | --- |
-| Five KPI cards | Total tokens, cache hit rate, average generation speed, credits, call count |
+| Five KPI cards | Total tokens, cache hit rate, average generation speed, credits, call count (linked to model and time filters) |
 | Throughput | tokens/s curve over 15 min – 24 h (switchable top-right), with a large 5-minute weighted average |
-| Model breakdown | Token share per model; spelling variants of the same model are merged |
-| Token volume | Hourly / daily stacked bars: cache hits, misses, output |
+| Model breakdown / composition | Model share by token or credit (switchable); when a single model is selected, shows internal hit/miss/output shares, component price estimates (cents/M tokens), and average price |
+| Token volume | Hourly / daily stacked bars: cache hits, misses, output (auto-bucketed by selected duration) |
 | Cache hit rate | Per-bucket hit-rate line with an 80% reference |
-| Sessions | Tokens, calls, hit rate, speed, credits and context usage per session |
+| Sessions & models | Dual tabs: switch between "Session ranking" and "Model breakdown & credits" |
 | Live calls | The latest 6 calls with input/output, measured speed and credits |
 | Mini window | The "悬浮" button collapses everything into a 326×158 always-on-top card: the latest call's speed, today's tokens, a mini throughput curve, hit rate and credits |
 
-Use the top bar to switch between **Today / Last 7 days / All**. Charts show details on hover.
+Use the top bar to switch between **Today / Yesterday / Last 7 days / Last 30 days / All / Custom ▾**, or filter by **Model: All ▾**. Charts show details on hover.
 
 <img src="screenshot-mini.png" width="374" alt="Mini window">
 
@@ -169,6 +172,8 @@ workbuddy-token-monitor/
 WB_MONITOR_PORT=9000 ./run.sh --web            # different port
 WB_HOME=/path/to/.workbuddy ./run.sh           # different data directory
 python3 qt_app.py --demo                       # open with demo data
+python3 qt_app.py --model DeepSeek-V4.1-Flash  # launch with a model filter
+python3 qt_app.py --range 7d                   # launch with a time range (today/yesterday/7d/30d/all/custom)
 python3 qt_app.py --shot out.png --range all   # offscreen render
 ```
 
