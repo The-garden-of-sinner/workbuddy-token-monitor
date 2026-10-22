@@ -43,6 +43,7 @@ print(json.dumps({"tag_name": "v" + v, "name": "v" + v, "body": text,
 PY
 )"
 
+START_TS=$(date +%s)
 echo "创建 release v$VERSION ..."
 RESP="$(curl -sS -X POST \
   -H "Authorization: Bearer $GH_TOKEN" \

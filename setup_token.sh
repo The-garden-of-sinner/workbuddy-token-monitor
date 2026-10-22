@@ -38,6 +38,29 @@ if [ "$CODE" = "200" ]; then
   LOGIN="$(curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/user \
     | /usr/bin/python3 -c 'import json,sys;print(json.load(sys.stdin).get("login",""))' 2>/dev/null || true)"
   echo "token 有效，账号：${LOGIN:-unknown}"
+
+  # classic token 会带 x-oauth-scopes；fine-grained 没有这个头
+  SCOPES="$(curl -sS -D - -o /dev/null -H "Authorization: Bearer $TOKEN" \
+    https://api.github.com/user 2>/dev/null \
+    | tr -d '\r' | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')"
+
+  if [ -n "${SCOPES:-}" ]; then
+    echo "权限范围：$SCOPES"
+    DANGER=""
+    for s in delete_repo admin:org admin:public_key admin:repo_hook admin:gpg_key; do
+      case ",$SCOPES," in
+        *"$s"*) DANGER="$DANGER $s" ;;
+      esac
+    done
+    if [ -n "$DANGER" ]; then
+      echo
+      echo "⚠️  包含高风险权限：$DANGER"
+      echo "    delete_repo 能删仓库，admin:public_key 能加 SSH 后门，建议撤销重建。"
+    fi
+  else
+    echo "权限范围：（fine-grained token，清单见 GitHub 页面）"
+  fi
+  echo
   echo "接着执行：./release.sh 1.0.0"
 else
   echo "token 校验失败（HTTP $CODE）。可能已过期、权限不足或网络不通。" >&2
