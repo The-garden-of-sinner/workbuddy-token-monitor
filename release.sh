@@ -11,10 +11,18 @@ VERSION="${1:-}"
 REPO="The-garden-of-sinner/workbuddy-token-monitor"
 DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 
-[ -n "$VERSION" ] || { echo "用法：GH_TOKEN=... ./release.sh 1.0.0"; exit 1; }
+[ -n "$VERSION" ] || { echo "用法：./release.sh 1.0.0（或 GH_TOKEN=... ./release.sh 1.0.0）"; exit 1; }
 DEB="$DIR/dist/workbuddy-token-monitor_${VERSION}_all.deb"
 [ -f "$DEB" ] || { echo "找不到 $DEB，先运行 ./build_deb.sh $VERSION"; exit 1; }
-[ -n "${GH_TOKEN:-}" ] || { echo "请先设置 GH_TOKEN 环境变量"; exit 1; }
+
+if [ -z "${GH_TOKEN:-}" ]; then
+  CONF="${XDG_CONFIG_HOME:-$HOME/.config}/workbuddy-token-monitor/token"
+  if [ -f "$CONF" ]; then
+    GH_TOKEN="$(cat "$CONF")"
+    export GH_TOKEN
+  fi
+fi
+[ -n "${GH_TOKEN:-}" ] || { echo "尚未配置 token，请先运行 ./setup_token.sh"; exit 1; }
 
 BODY="$(/usr/bin/python3 - "$VERSION" <<'PY'
 import json, sys
