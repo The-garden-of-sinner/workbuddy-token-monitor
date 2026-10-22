@@ -47,6 +47,7 @@ PY
 )"
 
 START_TS=$(date +%s)
+START_TS=$(date +%s)
 echo "创建 release v$VERSION ..."
 RESP="$(curl -sS -X POST \
   -H "Authorization: Bearer $GH_TOKEN" \
@@ -63,9 +64,25 @@ fi
 echo "release id = $REL_ID"
 
 echo "上传 $(basename "$DEB") ..."
-curl -sS -X POST \
+ASSET="$(curl -sS -X POST \
   -H "Authorization: Bearer $GH_TOKEN" \
   -H "Content-Type: application/vnd.debian.binary-package" \
   --data-binary "@$DEB" \
-  "https://uploads.github.com/repos/$REPO/releases/$REL_ID/assets?name=$(basename "$DEB")" \
-  | /usr/bin/python3 -c 'import json,sys;d=json.load(sys.stdin);print("完成：" + d.get("browser_download_url","(无返回)"))'
+  "https://uploads.github.com/repos/$REPO/releases/$REL_ID/assets?name=$(basename "$DEB")")"
+
+ASSET_URL="$(printf '%s' "$ASSET" | /usr/bin/python3 -c 'import json,sys;print(json.load(sys.stdin).get("browser_download_url",""))' 2>/dev/null || true)"
+ASSET_SIZE="$(printf '%s' "$ASSET" | /usr/bin/python3 -c 'import json,sys;print("%.1f" % (json.load(sys.stdin).get("size",0)/1024.0))' 2>/dev/null || echo "?")"
+
+if [ -z "$ASSET_URL" ]; then
+  echo "上传失败："
+  printf '%s\n' "$ASSET" | head -20
+  exit 1
+fi
+
+echo
+echo "✅ 发布完成（$(( $(date +%s) - START_TS ))s）"
+echo "   版本页：https://github.com/$REPO/releases/tag/v$VERSION"
+echo "   安装包：$ASSET_URL"
+echo "   大小  ：$ASSET_SIZE KB"
+echo
+echo "   安装：sudo dpkg -i $(basename "$DEB")"

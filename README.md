@@ -39,7 +39,7 @@
 `workbuddy-token-monitor_<版本>_all.deb`：
 
 ```bash
-sudo dpkg -i workbuddy-token-monitor_1.1.0_all.deb
+sudo dpkg -i workbuddy-token-monitor_1.1.1_all.deb
 sudo apt -f install          # 若提示缺少依赖
 ```
 
