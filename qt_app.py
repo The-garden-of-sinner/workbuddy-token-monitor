@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (QApplication, QDateEdit, QDialog, QFrame, QGraphics
                              QLabel, QMainWindow, QMenu, QPushButton, QScrollArea,
                              QSizePolicy, QVBoxLayout, QWidget)
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)

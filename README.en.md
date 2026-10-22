@@ -40,7 +40,7 @@ Grab the latest `workbuddy-token-monitor_<version>_all.deb` from
 [Releases](https://github.com/The-garden-of-sinner/workbuddy-token-monitor/releases):
 
 ```bash
-sudo dpkg -i workbuddy-token-monitor_1.0.0_all.deb
+sudo dpkg -i workbuddy-token-monitor_1.1.0_all.deb
 sudo apt -f install          # if dependencies are missing
 ```
 
