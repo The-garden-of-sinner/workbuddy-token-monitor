@@ -20,6 +20,11 @@
 
   const state = {
     range: "today",
+    customStart: "",
+    customEnd: "",
+    model: "",
+    modelMetric: "tokens", // "tokens" | "credit"
+    activeTab: "sessions", // "sessions" | "models"
     paused: false,
     data: null,
     lastUpdate: 0,
@@ -451,7 +456,8 @@
     const cx = W / 2, cy = H / 2;
     const R = Math.min(W, H) / 2 - 6;
     const r = R * 0.66;
-    const total = models.reduce((s, m) => s + m.tokens, 0);
+    const isCredit = state.modelMetric === "credit";
+    const total = models.reduce((s, m) => s + (isCredit ? m.credit : m.tokens), 0);
 
     if (!total) {
       ctx.strokeStyle = "#eef2f7";
@@ -465,7 +471,8 @@
     const prog = animate ? state._p || 0 : 1;
     let a0 = -Math.PI / 2;
     models.forEach((m, i) => {
-      const frac = m.tokens / total;
+      const val = isCredit ? m.credit : m.tokens;
+      const frac = val / total;
       const a1 = a0 + frac * Math.PI * 2 * prog;
       ctx.beginPath();
       ctx.arc(cx, cy, R, a0, a1);
@@ -482,7 +489,7 @@
     ctx.fillStyle = "#fff";
     ctx.fill();
 
-    canvas._hit = { donut: true, cx: cx, cy: cy, R: R, r: r, models: models, total: total };
+    canvas._hit = { donut: true, cx: cx, cy: cy, R: R, r: r, models: models, total: total, isCredit: isCredit };
   }
 
   /* ------------------------------------------------ hover */
@@ -559,10 +566,15 @@
           let acc = 0;
           for (let i = 0; i < hit.donut.models.length; i++) {
             const m = hit.donut.models[i];
-            const f = m.tokens / hit.donut.total;
+            const val = hit.donut.isCredit ? m.credit : m.tokens;
+            const f = val / (hit.donut.total || 1);
             if (ang >= acc && ang < acc + f) {
+              const cShare = (m.credit_share !== undefined ? m.credit_share * 100 : ((m.credit / (hit.donut.total || 1)) * 100)).toFixed(1);
+              const tShare = (m.share !== undefined ? m.share * 100 : ((m.tokens / (hit.donut.total || 1)) * 100)).toFixed(1);
               showTip(
-                '<b>' + m.name + '</b><br>' + compact(m.tokens) + ' tokens · ' + (f * 100).toFixed(1) + '%<br>' +
+                '<b>' + esc(m.name) + '</b><br>' +
+                '<span class="k">Token 用量</span> ' + compact(m.tokens) + ' (' + tShare + '%)<br>' +
+                '<span class="k">积分消耗</span> ' + m.credit.toFixed(2) + ' 分 (' + cShare + '%)<br>' +
                 '<span class="k">' + m.calls + ' 次调用 · 命中率 ' + pct(m.hit / (m.in || 1)) + '</span>',
                 px, py
               );
@@ -623,13 +635,33 @@
 
   function renderModels(models) {
     const box = $("#model-legend");
-    const total = models.reduce((s, m) => s + m.tokens, 0);
-    $("#model-total").textContent = compact(total);
-    box.innerHTML = models.slice(0, 6).map((m, i) =>
-      '<li><i style="background:' + MODEL_COLORS[i % MODEL_COLORS.length] + '"></i>' +
-      '<span class="lname" title="' + esc(m.name) + '">' + esc(m.name) + "</span>" +
-      '<span class="lval">' + (total ? ((m.tokens / total) * 100).toFixed(1) : "0") + "%</span></li>"
-    ).join("");
+    const isCredit = state.modelMetric === "credit";
+    const totalTokens = models.reduce((s, m) => s + m.tokens, 0);
+    const totalCredit = models.reduce((s, m) => s + m.credit, 0);
+
+    const totalEl = $("#model-total");
+    const labelEl = $("#model-total-label");
+    if (isCredit) {
+      totalEl.textContent = totalCredit.toFixed(2);
+      if (labelEl) labelEl.textContent = "总积分(分)";
+    } else {
+      totalEl.textContent = compact(totalTokens);
+      if (labelEl) labelEl.textContent = "总 Token";
+    }
+
+    const items = isCredit
+      ? [].concat(models).sort((a, b) => b.credit - a.credit)
+      : [].concat(models).sort((a, b) => b.tokens - a.tokens);
+
+    box.innerHTML = items.slice(0, 6).map((m, i) => {
+      const color = MODEL_COLORS[i % MODEL_COLORS.length];
+      const valTxt = isCredit
+        ? m.credit.toFixed(2) + " 分 (" + (totalCredit ? ((m.credit / totalCredit) * 100).toFixed(1) : "0") + "%)"
+        : compact(m.tokens) + " (" + (totalTokens ? ((m.tokens / totalTokens) * 100).toFixed(1) : "0") + "%)";
+      return '<li><i style="background:' + color + '"></i>' +
+        '<span class="lname" title="' + esc(m.name) + '">' + esc(m.name) + "</span>" +
+        '<span class="lval">' + valTxt + "</span></li>";
+    }).join("");
   }
 
   function esc(s) {
@@ -718,6 +750,63 @@
       "命中 " + compact(saved) + " tokens，约等于减少 " + (factor ? factor.toFixed(1) + "×" : "大量") + " 的重复计算";
   }
 
+  function renderModelTable(models) {
+    const tb = $("#tbl-models tbody");
+    if (!tb) return;
+    if (!models || !models.length) {
+      tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:26px 0">当前选定时间段内没有模型调用记录</td></tr>';
+      return;
+    }
+    const maxCredit = Math.max.apply(null, models.map((m) => m.credit).concat([0.01]));
+    const totalCredit = models.reduce((s, m) => s + m.credit, 0);
+
+    tb.innerHTML = models.map((m, i) => {
+      const hr = m.hit_rate !== undefined ? m.hit_rate : (m.hit / (m.in || 1));
+      const cls = hr >= 0.9 ? "good" : hr >= 0.6 ? "mid" : "bad";
+      const cRatio = maxCredit > 0 ? Math.min(100, Math.max(0, (m.credit / maxCredit) * 100)) : 0;
+      const cShare = m.credit_share !== undefined
+        ? (m.credit_share * 100).toFixed(1) + "%"
+        : (totalCredit ? ((m.credit / totalCredit) * 100).toFixed(1) + "%" : "0.0%");
+      const isSelected = state.model && state.model.toLowerCase() === m.name.toLowerCase();
+
+      return '<tr' + (isSelected ? ' style="background:#f8faff"' : '') + '>' +
+        '<td class="col-title">' +
+        '<div class="title-cell"><span class="rank">' + (i + 1) + '</span>' +
+        '<span class="model-chip" title="' + esc(m.name) + '">' + esc(m.name) + '</span>' +
+        (isSelected ? ' <span class="pill good" style="font-size:10px;padding:2px 6px">已筛选</span>' : '') +
+        '</div></td>' +
+        '<td class="num"><b>' + compact(m.tokens) + '</b></td>' +
+        '<td class="num">' + compact(m.in) + ' / ' + compact(m.out) + '</td>' +
+        '<td class="num"><span class="pill ' + cls + '">' + (hr * 100).toFixed(1) + '%</span></td>' +
+        '<td class="num">' + intFmt(m.calls) + '</td>' +
+        '<td class="num">' + (m.speed ? m.speed.toFixed(0) : '—') + '</td>' +
+        '<td class="num"><div class="credit-bar-cell"><b>' + m.credit.toFixed(2) + ' 分</b>' +
+        '<span class="credit-mini-bar"><i style="width:' + cRatio.toFixed(1) + '%"></i></span></div></td>' +
+        '<td class="num">' + cShare + '</td>' +
+        '<td style="text-align:center">' +
+        (isSelected
+          ? '<button class="btn-filter-this" data-clear="1" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">清除</button>'
+          : '<button class="btn-filter-this" data-model="' + esc(m.name) + '">筛选</button>') +
+        '</td>' +
+        '</tr>';
+    }).join("");
+  }
+
+  function syncModelFilterSelect(models) {
+    const sel = $("#model-filter");
+    if (!sel) return;
+    const current = (state.model || "").toLowerCase();
+    const opts = ['<option value="">全部模型 (' + models.length + ' 种)</option>'];
+    models.forEach((m) => {
+      const isSel = m.name.toLowerCase() === current ? ' selected' : '';
+      opts.push('<option value="' + esc(m.name) + '"' + isSel + '>' + esc(m.name) + ' (' + compact(m.tokens) + ' tok · ' + m.credit.toFixed(1) + '分)</option>');
+    });
+    sel.innerHTML = opts.join("");
+    sel.classList.toggle("active", !!state.model);
+    const clr = $("#model-filter-clear");
+    if (clr) clr.style.display = state.model ? "block" : "none";
+  }
+
   function render() {
     const data = state.data;
     if (!data) return;
@@ -726,8 +815,10 @@
     renderNowSpeed(data);
     renderModels(data.models);
     renderSessions(data.sessions);
+    renderModelTable(data.models);
     renderStream(data.recent);
     renderCacheNote(data.kpi);
+    syncModelFilterSelect(data.models);
 
     $("#usage-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
     $("#cache-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
@@ -769,7 +860,15 @@
   async function load() {
     if (state.paused) return;
     try {
-      const res = await fetch("/api/snapshot?range=" + encodeURIComponent(state.range), { cache: "no-store" });
+      let url = "/api/snapshot?range=" + encodeURIComponent(state.range);
+      if (state.range === "custom") {
+        if (state.customStart) url += "&start=" + encodeURIComponent(state.customStart);
+        if (state.customEnd) url += "&end=" + encodeURIComponent(state.customEnd);
+      }
+      if (state.model) {
+        url += "&model=" + encodeURIComponent(state.model);
+      }
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       state.data = data;
@@ -784,14 +883,155 @@
 
   /* ------------------------------------------------ 事件 */
 
+  const popover = $("#custom-date-popover");
   $("#range").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-range]");
     if (!b) return;
+    const r = b.dataset.range;
+    if (r === "custom") {
+      if (popover) {
+        popover.style.display = popover.style.display === "none" ? "block" : "none";
+      }
+      return;
+    }
+    if (popover) popover.style.display = "none";
+    const custBtn = $("#btn-custom-range");
+    if (custBtn) custBtn.textContent = "自定义 ▾";
     $$("#range button").forEach((x) => x.classList.toggle("on", x === b));
-    state.range = b.dataset.range;
+    state.range = r;
+    state.customStart = "";
+    state.customEnd = "";
     state.animate = true;
     load();
   });
+
+  function fmtDateInput(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  $$(".preset-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const p = btn.dataset.preset;
+      const now = new Date();
+      let s = new Date(now), e = new Date(now);
+      if (p === "today") {
+        // today
+      } else if (p === "yesterday") {
+        s.setDate(s.getDate() - 1);
+        e.setDate(e.getDate() - 1);
+      } else if (p === "7d") {
+        s.setDate(s.getDate() - 6);
+      } else if (p === "30d") {
+        s.setDate(s.getDate() - 29);
+      } else if (p === "thismonth") {
+        s.setDate(1);
+      }
+      $("#inp-start-date").value = fmtDateInput(s);
+      $("#inp-end-date").value = fmtDateInput(e);
+    });
+  });
+
+  const btnApply = $("#btn-custom-apply");
+  if (btnApply) {
+    btnApply.addEventListener("click", () => {
+      const sVal = $("#inp-start-date").value;
+      const eVal = $("#inp-end-date").value;
+      if (!sVal && !eVal) {
+        if (popover) popover.style.display = "none";
+        return;
+      }
+      state.range = "custom";
+      state.customStart = sVal ? sVal + " 00:00:00" : "";
+      state.customEnd = eVal ? eVal + " 23:59:59" : "";
+      $$("#range button").forEach((x) => x.classList.toggle("on", x.dataset.range === "custom"));
+      const sShort = sVal ? sVal.slice(5) : "";
+      const eShort = eVal ? eVal.slice(5) : "";
+      const custBtn = $("#btn-custom-range");
+      if (custBtn) custBtn.textContent = (sShort && eShort ? sShort + "~" + eShort : "已选时间") + " ▾";
+      if (popover) popover.style.display = "none";
+      state.animate = true;
+      load();
+    });
+  }
+
+  const btnCancel = $("#btn-custom-cancel");
+  if (btnCancel) {
+    btnCancel.addEventListener("click", () => {
+      if (popover) popover.style.display = "none";
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (popover && popover.style.display !== "none") {
+      if (!e.target.closest(".range-box")) {
+        popover.style.display = "none";
+      }
+    }
+  });
+
+  const selModel = $("#model-filter");
+  if (selModel) {
+    selModel.addEventListener("change", (e) => {
+      state.model = e.target.value;
+      state.animate = true;
+      load();
+    });
+  }
+  const clrModel = $("#model-filter-clear");
+  if (clrModel) {
+    clrModel.addEventListener("click", () => {
+      state.model = "";
+      if (selModel) selModel.value = "";
+      state.animate = true;
+      load();
+    });
+  }
+
+  const metricToggle = $("#model-metric-toggle");
+  if (metricToggle) {
+    metricToggle.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-metric]");
+      if (!b) return;
+      $$("#model-metric-toggle button").forEach((x) => x.classList.toggle("on", x === b));
+      state.modelMetric = b.dataset.metric;
+      if (state.data) {
+        renderModels(state.data.models);
+        drawDonut($("#chart-models"), state.data.models, false);
+      }
+    });
+  }
+
+  const tabHeader = $("#table-tabs");
+  if (tabHeader) {
+    tabHeader.addEventListener("click", (e) => {
+      const b = e.target.closest("button.tbl-tab");
+      if (!b) return;
+      $$("#table-tabs button").forEach((x) => x.classList.toggle("on", x === b));
+      state.activeTab = b.dataset.tab;
+      const isSess = state.activeTab === "sessions";
+      $("#wrap-sessions").style.display = isSess ? "" : "none";
+      $("#wrap-models").style.display = isSess ? "none" : "";
+      $("#table-tag").textContent = isSess ? "上下文占用为当前窗口" : "按模型查看累计消耗与积分";
+    });
+  }
+
+  const tblModels = $("#tbl-models");
+  if (tblModels) {
+    tblModels.addEventListener("click", (e) => {
+      const b = e.target.closest(".btn-filter-this");
+      if (!b) return;
+      if (b.dataset.clear) {
+        state.model = "";
+      } else if (b.dataset.model) {
+        state.model = b.dataset.model;
+      }
+      state.animate = true;
+      load();
+    });
+  }
 
   $("#pause").addEventListener("click", () => {
     state.paused = !state.paused;

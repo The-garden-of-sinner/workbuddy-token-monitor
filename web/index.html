@@ -32,13 +32,50 @@
       </div>
     </div>
 
-    <nav class="seg" id="range">
-      <button data-range="today" class="on">今日</button>
-      <button data-range="7d">近 7 天</button>
-      <button data-range="all">全部</button>
-    </nav>
+    <div class="range-box">
+      <nav class="seg" id="range">
+        <button data-range="today" class="on">今日</button>
+        <button data-range="yesterday">昨日</button>
+        <button data-range="7d">近 7 天</button>
+        <button data-range="30d">近 30 天</button>
+        <button data-range="all">全部</button>
+        <button data-range="custom" id="btn-custom-range">自定义 ▾</button>
+      </nav>
+
+      <div class="custom-date-popover" id="custom-date-popover" style="display:none">
+        <div class="pop-header">选定查询时间</div>
+        <div class="pop-presets">
+          <button type="button" class="preset-chip" data-preset="today">今日</button>
+          <button type="button" class="preset-chip" data-preset="yesterday">昨日</button>
+          <button type="button" class="preset-chip" data-preset="7d">近 7 天</button>
+          <button type="button" class="preset-chip" data-preset="30d">近 30 天</button>
+          <button type="button" class="preset-chip" data-preset="thismonth">本月</button>
+        </div>
+        <div class="pop-inputs">
+          <div class="input-group">
+            <label for="inp-start-date">开始日期</label>
+            <input type="date" id="inp-start-date">
+          </div>
+          <div class="input-sep">至</div>
+          <div class="input-group">
+            <label for="inp-end-date">结束日期</label>
+            <input type="date" id="inp-end-date">
+          </div>
+        </div>
+        <div class="pop-actions">
+          <button type="button" class="btn-cancel" id="btn-custom-cancel">取消</button>
+          <button type="button" class="btn-apply" id="btn-custom-apply">确定查询</button>
+        </div>
+      </div>
+    </div>
 
     <div class="top-right">
+      <div class="model-select-wrap">
+        <select id="model-filter" title="按模型筛选用量和积分">
+          <option value="">全部模型</option>
+        </select>
+        <button id="model-filter-clear" class="filter-clear-btn" title="清除模型筛选" style="display:none">×</button>
+      </div>
       <div class="live" id="livebadge"><i></i>实时</div>
       <button class="icon-btn" id="pause" title="暂停 / 继续刷新">
         <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>
@@ -102,10 +139,16 @@
     </article>
 
     <article class="card c-model">
-      <header><h2>模型分布</h2><span class="tag">按 token</span></header>
+      <header>
+        <h2>模型分布</h2>
+        <div class="card-seg" id="model-metric-toggle">
+          <button class="on" data-metric="tokens">按 Token</button>
+          <button data-metric="credit">按积分</button>
+        </div>
+      </header>
       <div class="donut-wrap">
         <canvas id="chart-models"></canvas>
-        <div class="donut-center"><b id="model-total">—</b><span>总 Token</span></div>
+        <div class="donut-center"><b id="model-total">—</b><span id="model-total-label">总 Token</span></div>
       </div>
       <ul class="legend" id="model-legend"></ul>
     </article>
@@ -129,10 +172,13 @@
 
   <section class="card c-sessions">
     <header>
-      <h2>会话用量排行</h2>
-      <span class="tag">上下文占用为当前窗口</span>
+      <div class="tab-header" id="table-tabs">
+        <button class="tbl-tab on" data-tab="sessions">会话用量排行</button>
+        <button class="tbl-tab" data-tab="models">模型用量与积分明细</button>
+      </div>
+      <span class="tag" id="table-tag">上下文占用为当前窗口</span>
     </header>
-    <div class="table-wrap">
+    <div class="table-wrap" id="wrap-sessions">
       <table id="tbl-sessions">
         <thead>
           <tr>
@@ -144,6 +190,24 @@
             <th class="num">速度</th>
             <th class="num">积分</th>
             <th class="col-ctx">上下文</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="table-wrap" id="wrap-models" style="display:none">
+      <table id="tbl-models">
+        <thead>
+          <tr>
+            <th class="col-title">模型名称</th>
+            <th class="num">Token 总量</th>
+            <th class="num">输入 / 输出</th>
+            <th class="num">缓存命中率</th>
+            <th class="num">调用次数</th>
+            <th class="num">平均速度</th>
+            <th class="num">积分消耗</th>
+            <th class="num">积分占比</th>
+            <th style="text-align:center;width:80px">操作</th>
           </tr>
         </thead>
         <tbody></tbody>

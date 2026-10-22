@@ -56,6 +56,30 @@ def hour_start_ms(ts_ms):
     return int(time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, 0, 0, 0, 0, -1)) * 1000)
 
 
+def day_end_ms(ts_ms):
+    lt = time.localtime(ts_ms / 1000.0)
+    return int(time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 23, 59, 59, 0, 0, -1)) * 1000) + 999
+
+
+def parse_ts_ms(v, default=None):
+    if v is None:
+        return default
+    if isinstance(v, (int, float)):
+        return int(v)
+    v = str(v).strip()
+    if not v:
+        return default
+    if v.isdigit():
+        return int(v)
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%d"):
+        try:
+            st = time.strptime(v, fmt)
+            return int(time.mktime(st) * 1000)
+        except ValueError:
+            pass
+    return default
+
+
 def num(v):
     return v if isinstance(v, (int, float)) else 0
 
@@ -269,9 +293,40 @@ class Collector(object):
         self.scan()
 
     # -- 聚合 ----------------------------------------------------
-    def snapshot(self, range_key, speed_min=60):
+    def snapshot(self, range_key, speed_min=60, start_ms=None, end_ms=None, model=None):
         now = ms_now()
-        ck = (self.version, range_key, speed_min)
+        start_ms = parse_ts_ms(start_ms)
+        end_ms = parse_ts_ms(end_ms)
+        if model:
+            model = model.strip() or None
+
+        today = day_start_ms(now)
+
+        if range_key == "today":
+            actual_start = today
+            actual_end = now
+        elif range_key == "yesterday":
+            yesterday_0 = day_start_ms(now - 86400000)
+            actual_start = yesterday_0
+            actual_end = day_end_ms(yesterday_0)
+        elif range_key == "7d":
+            actual_start = day_start_ms(now - 6 * 86400000)
+            actual_end = now
+        elif range_key == "30d":
+            actual_start = day_start_ms(now - 29 * 86400000)
+            actual_end = now
+        elif range_key == "custom":
+            actual_start = start_ms if start_ms is not None else today
+            actual_end = end_ms if end_ms is not None else now
+            if actual_end < actual_start:
+                actual_start, actual_end = actual_end, actual_start
+        else:
+            range_key = "all"
+            actual_start = None
+            actual_end = now
+
+        ck = (self.version, range_key, actual_start, actual_end,
+              model.lower() if model else None, speed_min)
 
         # 记录未变化时复用上次聚合结果，让高频轮询只付出扫描成本
         with self.lock:
@@ -281,39 +336,52 @@ class Collector(object):
             sessions = dict(self.sessions)
             ctx = dict(self.ctx_usage)
 
-        today = day_start_ms(now)
+        if actual_start is None:
+            actual_start = recs[0]["t"] if recs else now
 
-        if range_key == "today":
-            start = today
-            sel = [r for r in recs if r["t"] >= start]
-        elif range_key == "7d":
-            start = day_start_ms(now - 6 * 86400000)
-            sel = [r for r in recs if r["t"] >= start]
+        if range_key == "all":
+            time_sel = list(recs)
         else:
-            start = recs[0]["t"] if recs else now
-            sel = list(recs)
+            time_sel = [r for r in recs if actual_start <= r["t"] <= actual_end]
+
+        # 模型全量统计（在选定时间范围内各模型的消耗与占比）
+        all_models = self._models(time_sel)
+
+        # 若指定了具体模型，则其余视图按该模型过滤
+        if model:
+            sel = [r for r in time_sel if (r["model"] or "").lower() == model.lower()]
+        else:
+            sel = time_sel
 
         kpi = self._kpi(sel)
         today_sel = [r for r in recs if r["t"] >= today]
+        if model:
+            today_sel = [r for r in today_sel if (r["model"] or "").lower() == model.lower()]
         tk = self._kpi(today_sel)
         kpi["today_tokens"] = tk["tokens"]
         kpi["today_credit"] = tk["credit"]
         kpi["today_calls"] = tk["calls"]
-        kpi["all_tokens"] = self._kpi(recs)["tokens"]
 
-        series = self._series(sel, start, now, range_key)
-        speeds = self._speeds(recs, now, speed_min)
-        models = self._models(sel)
+        all_sel = recs if not model else [r for r in recs if (r["model"] or "").lower() == model.lower()]
+        ak = self._kpi(all_sel)
+        kpi["all_tokens"] = ak["tokens"]
+        kpi["all_credit"] = ak["credit"]
+
+        series = self._series(sel, actual_start, actual_end, range_key)
+        speeds = self._speeds(sel if model else recs, actual_end, speed_min)
         sess_rows = self._sessions(sel, sessions, ctx, now)
         recent = self._recent(sel, sessions)
 
         result = {
             "generated_at": now,
             "range": range_key,
+            "start": actual_start,
+            "end": actual_end,
+            "selected_model": model,
             "kpi": kpi,
             "series": series,
             "speeds": speeds,
-            "models": models,
+            "models": all_models,
             "sessions": sess_rows,
             "recent": recent,
             "status": {
@@ -356,16 +424,27 @@ class Collector(object):
             "gen_seconds": round(gen_ms / 1000.0, 1),
         }
 
-    def _series(self, rows, start, now, range_key):
+    def _series(self, rows, start, end, range_key):
         buckets = []
-        if range_key == "today":
-            base = day_start_ms(now)
+        span_ms = max(0, end - start)
+
+        # 判断是否按小时分桶：单日、昨日、今日，或跨度不超过 40 小时
+        if range_key in ("today", "yesterday") or (range_key == "custom" and span_ms <= 40 * 3600000):
+            base = hour_start_ms(start)
+            h_count = max(1, int((hour_start_ms(end) - base) / 3600000) + 1)
+            h_count = min(h_count, 48)
+
+            single_day = time.localtime(start / 1000.0).tm_yday == time.localtime(end / 1000.0).tm_yday
+
             idx = {}
-            for h in range(24):
-                b = {"label": "%02d:00" % h, "hit": 0, "miss": 0, "out": 0,
-                     "credit": 0.0, "calls": 0, "t": base + h * 3600000}
+            for h in range(h_count):
+                ts = base + h * 3600000
+                lt = time.localtime(ts / 1000.0)
+                lbl = "%02d:00" % lt.tm_hour if single_day else "%d/%d %02d:00" % (lt.tm_mon, lt.tm_mday, lt.tm_hour)
+                b = {"label": lbl, "hit": 0, "miss": 0, "out": 0,
+                     "credit": 0.0, "calls": 0, "t": ts}
                 buckets.append(b)
-                idx[b["t"]] = b
+                idx[ts] = b
             for r in rows:
                 key = hour_start_ms(r["t"])
                 b = idx.get(key)
@@ -378,16 +457,20 @@ class Collector(object):
                 b["calls"] += 1
             return {"granularity": "hour", "buckets": buckets}
 
-        # 按天
+        # 按天分桶
         if range_key == "7d":
             days = 7
-            base = day_start_ms(now - (days - 1) * 86400000)
+            base = day_start_ms(end - (days - 1) * 86400000)
+            count = days
+        elif range_key == "30d":
+            days = 30
+            base = day_start_ms(end - (days - 1) * 86400000)
             count = days
         else:
             base = day_start_ms(start)
-            span = int((day_start_ms(now) - base) / 86400000) + 1
+            span = int((day_start_ms(end) - base) / 86400000) + 1
             count = max(1, min(span, MAX_DAY_BUCKETS))
-            base = day_start_ms(now) - (count - 1) * 86400000
+            base = day_start_ms(end) - (count - 1) * 86400000
 
         idx = {}
         for i in range(count):
@@ -410,8 +493,8 @@ class Collector(object):
         return {"granularity": "day", "buckets": buckets}
 
     @staticmethod
-    def _speeds(rows, now, minutes=60):
-        """最近 N 分钟，按粒度分桶的生成速度（tokens/s）。"""
+    def _speeds(rows, end_time, minutes=60):
+        """指定时间前 N 分钟，按粒度分桶的生成速度（tokens/s）。"""
         minutes = max(5, int(minutes or 60))
         if minutes <= 60:
             bucket = 1
@@ -422,14 +505,14 @@ class Collector(object):
 
         n = max(1, minutes // bucket)
         span_ms = bucket * 60000
-        start = now - n * span_ms
+        start = end_time - n * span_ms
 
         out = []
         for i in range(n):
             out.append({"t": start + i * span_ms, "v": 0.0, "out": 0, "calls": 0, "_d": 0})
 
         for r in rows:
-            if r["t"] < start or r["t"] > now:
+            if r["t"] < start or r["t"] > end_time:
                 continue
             i = int((r["t"] - start) // span_ms)
             if 0 <= i < n:
@@ -454,7 +537,8 @@ class Collector(object):
             a = agg.get(k)
             if a is None:
                 a = {"name": raw, "tokens": 0, "in": 0, "out": 0,
-                     "calls": 0, "hit": 0, "credit": 0.0}
+                     "calls": 0, "hit": 0, "miss": 0, "credit": 0.0,
+                     "gen_ms": 0, "gen_out": 0}
                 agg[k] = a
                 display[k] = {}
             display[k][raw] = display[k].get(raw, 0) + 1
@@ -463,16 +547,26 @@ class Collector(object):
             a["tokens"] += r["in"] + r["out"]
             a["calls"] += 1
             a["hit"] += r["hit"]
+            a["miss"] += r["miss"]
             a["credit"] += r["credit"]
+            if r["dur"] and r["dur"] > 200:
+                a["gen_ms"] += r["dur"]
+                a["gen_out"] += r["out"]
         for k, a in agg.items():
             spellings = display.get(k) or {}
             if spellings:
                 a["name"] = max(spellings.items(), key=lambda kv: kv[1])[0]
         items = sorted(agg.values(), key=lambda x: -x["tokens"])
-        total = sum(i["tokens"] for i in items) or 1
+        total_tokens = sum(i["tokens"] for i in items) or 1
+        total_credit = sum(i["credit"] for i in items) or 0.0
         for i in items:
-            i["share"] = i["tokens"] / float(total)
+            i["share"] = round(i["tokens"] / float(total_tokens), 4)
             i["credit"] = round(i["credit"], 2)
+            i["credit_share"] = round((i["credit"] / total_credit), 4) if total_credit > 0 else 0.0
+            i["hit_rate"] = round((i["hit"] / float(i["in"])), 4) if i["in"] else 0.0
+            i["speed"] = round((i["gen_out"] / (i["gen_ms"] / 1000.0)), 1) if i["gen_ms"] else 0.0
+            i.pop("gen_ms", None)
+            i.pop("gen_out", None)
         return items
 
     def _sessions(self, rows, sessions, ctx, now):
@@ -582,14 +676,17 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/snapshot":
             q = parse_qs(u.query)
             rng = (q.get("range") or ["today"])[0]
-            if rng not in ("today", "7d", "all"):
+            if rng not in ("today", "yesterday", "7d", "30d", "all", "custom"):
                 rng = "today"
             try:
                 span = int((q.get("span") or ["60"])[0])
             except (TypeError, ValueError):
                 span = 60
+            start_val = (q.get("start") or [None])[0]
+            end_val = (q.get("end") or [None])[0]
+            model_val = (q.get("model") or [None])[0]
             try:
-                data = COLLECTOR.snapshot(rng, span)
+                data = COLLECTOR.snapshot(rng, speed_min=span, start_ms=start_val, end_ms=end_val, model=model_val)
             except Exception as e:
                 return self._send(500, json.dumps({"error": str(e)}))
             return self._send(200, json.dumps(data, ensure_ascii=False))

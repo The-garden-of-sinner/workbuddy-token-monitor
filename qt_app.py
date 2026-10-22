@@ -18,10 +18,10 @@ import re
 import sys
 import time
 
-from PyQt5.QtCore import QPointF, QProcess, QRectF, QSize, Qt, QTimer
+from PyQt5.QtCore import QDate, QPointF, QProcess, QRectF, QSize, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QFont, QFontMetrics, QIcon, QLinearGradient,
                          QPainter, QPainterPath, QPen, QPixmap, QRadialGradient)
-from PyQt5.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
+from PyQt5.QtWidgets import (QApplication, QDateEdit, QDialog, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
                              QLabel, QMainWindow, QMenu, QPushButton, QScrollArea,
                              QSizePolicy, QVBoxLayout, QWidget)
 
@@ -622,12 +622,21 @@ class ModelCard(Card):
     def __init__(self):
         super(ModelCard, self).__init__()
         self.models = []
+        self.metric = "tokens"  # "tokens" | "credit"
         self.setMinimumHeight(250)
         self.setMinimumWidth(300)
+        self.setCursor(Qt.PointingHandCursor)
 
     def set_data(self, models):
         self.models = models
         self.update()
+
+    def mousePressEvent(self, e):
+        # 点击右上角度量标签或标题切换度量（Token <-> 积分）
+        if e.y() < 42 and e.x() > self.width() - 130:
+            self.metric = "credit" if self.metric == "tokens" else "tokens"
+            self.update()
+        super(ModelCard, self).mousePressEvent(e)
 
     def paintEvent(self, e):
         super(ModelCard, self).paintEvent(e)
@@ -635,10 +644,17 @@ class ModelCard(Card):
         p.setRenderHint(QPainter.Antialiasing)
         W, H = self.width(), self.height()
         txt(p, QRectF(18, 14, 160, 18), "模型分布", F(13, QFont.DemiBold), INK)
-        txt(p, QRectF(W - 120, 15, 102, 16), "按 token", F(10), INK3,
-            Qt.AlignRight | Qt.AlignVCenter)
 
-        total = sum(m["tokens"] for m in self.models)
+        is_credit = self.metric == "credit"
+        tag_rect = QRectF(W - 120, 12, 102, 22)
+        p.setPen(QPen(QColor("#c7d2fe") if is_credit else LINE, 1))
+        p.setBrush(QBrush(QColor("#eef2ff") if is_credit else QColor("#f8fafc")))
+        p.drawPath(rr(tag_rect, 6))
+        txt(p, tag_rect, "按积分 ▾" if is_credit else "按 token ▾",
+            F(10, QFont.DemiBold if is_credit else QFont.Normal),
+            VIOLET if is_credit else INK2, Qt.AlignCenter)
+
+        total = sum((m["credit"] if is_credit else m["tokens"]) for m in self.models)
         d = min(H - 60, W * 0.46, 168)
         cx, cy = 18 + d / 2, 46 + (H - 60) / 2
         R, r = d / 2, d / 2 * 0.66
@@ -653,7 +669,8 @@ class ModelCard(Card):
 
         a0 = 90 * 16
         for i, m in enumerate(self.models):
-            frac = m["tokens"] / float(total)
+            val = m["credit"] if is_credit else m["tokens"]
+            frac = val / float(total) if total else 0
             span = -frac * 360 * 16
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(MODEL_COLORS[i % len(MODEL_COLORS)]))
@@ -666,28 +683,33 @@ class ModelCard(Card):
             a0 += span
 
         # 中心
-        txt(p, QRectF(cx - R * 0.7, cy - 18, R * 1.4, 20), compact(total),
-            NUM(17, QFont.DemiBold), INK, Qt.AlignHCenter | Qt.AlignVCenter)
-        txt(p, QRectF(cx - R * 0.7, cy + 2, R * 1.4, 14), "总 Token", F(9), INK3,
+        center_txt = ("%.2f分" % total) if is_credit else compact(total)
+        center_lbl = "总积分" if is_credit else "总 Token"
+        txt(p, QRectF(cx - R * 0.7, cy - 18, R * 1.4, 20), center_txt,
+            NUM(16 if is_credit else 17, QFont.DemiBold), INK, Qt.AlignHCenter | Qt.AlignVCenter)
+        txt(p, QRectF(cx - R * 0.7, cy + 2, R * 1.4, 14), center_lbl, F(9), INK3,
             Qt.AlignHCenter | Qt.AlignVCenter)
 
         # 图例
         lx = cx + R + 22
         lw = W - lx - 16
         ly = 52
-        for i, m in enumerate(self.models[:5]):
-            pct = m["tokens"] / float(total) * 100
+        models_sorted = sorted(self.models, key=lambda x: -(x["credit"] if is_credit else x["tokens"]))
+        for i, m in enumerate(models_sorted[:5]):
+            val = m["credit"] if is_credit else m["tokens"]
+            pct = val / float(total) * 100 if total else 0
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(MODEL_COLORS[i % len(MODEL_COLORS)]))
             p.drawPath(rr(QRectF(lx, ly + 4, 7, 7), 2))
             name = m["name"]
             f = F(10)
             fm = QFontMetrics(f)
-            avail = lw - 46
+            avail = lw - 76
             while fm.width(name) > avail and len(name) > 4:
                 name = name[:-2]
             txt(p, QRectF(lx + 13, ly, avail, 15), name, f, INK2)
-            txt(p, QRectF(lx + lw - 42, ly, 42, 15), "%.1f%%" % pct, NUM(9), INK3,
+            val_str = ("%.1f分" % m["credit"]) if is_credit else compact(m["tokens"])
+            txt(p, QRectF(lx + lw - 72, ly, 72, 15), "%s %.1f%%" % (val_str, pct), NUM(9), INK3,
                 Qt.AlignRight | Qt.AlignVCenter)
             ly += 21
         p.end()
@@ -841,21 +863,52 @@ class SessionTable(Card):
         ("上下文", 7, 120),
     ]
 
+    MODEL_COLS = [
+        ("模型名称", 0, 240),
+        ("Token 总量", 1, 90),
+        ("输入 / 输出", 2, 130),
+        ("缓存命中率", 3, 80),
+        ("调用次数", 4, 70),
+        ("平均速度", 5, 75),
+        ("积分消耗", 6, 85),
+        ("积分占比", 7, 80),
+    ]
+
     def __init__(self):
         super(SessionTable, self).__init__(pad=0)
         self.rows = []
+        self.models = []
+        self.tab = "sessions"  # "sessions" | "models"
         self.hover = -1
         self.setMouseTracking(True)
+        self.setCursor(Qt.PointingHandCursor)
 
-    def set_data(self, rows):
+    def set_data(self, rows, models=None):
         self.rows = rows[:6]
-        h = 80 + 42 * max(1, len(self.rows))
+        if models is not None:
+            self.models = models
+        count = len(self.rows) if self.tab == "sessions" else len(self.models)
+        h = 80 + 42 * max(1, count)
         self.setFixedHeight(h)
         self.update()
 
+    def mousePressEvent(self, e):
+        if e.y() < 38:
+            old = self.tab
+            if e.x() < 125:
+                self.tab = "sessions"
+            elif 125 <= e.x() < 280:
+                self.tab = "models"
+            if old != self.tab:
+                count = len(self.rows) if self.tab == "sessions" else len(self.models)
+                self.setFixedHeight(80 + 42 * max(1, count))
+                self.update()
+        super(SessionTable, self).mousePressEvent(e)
+
     def mouseMoveEvent(self, e):
+        cur_len = len(self.rows) if self.tab == "sessions" else len(self.models)
         idx = int((e.y() - 44) / 42)
-        idx = idx if 0 <= idx < len(self.rows) else -1
+        idx = idx if 0 <= idx < cur_len else -1
         if idx != self.hover:
             self.hover = idx
             self.update()
@@ -869,119 +922,208 @@ class SessionTable(Card):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         W = self.width()
-        txt(p, QRectF(18, 14, 240, 18), "会话用量排行", F(13, QFont.DemiBold), INK)
-        txt(p, QRectF(W - 260, 15, 242, 16), "上下文占用为当前窗口", F(10), INK3,
-            Qt.AlignRight | Qt.AlignVCenter)
 
-        # 列宽按比例分配
-        fixed = sum(c[2] for c in self.COLS[1:])
-        left = 20
-        spare = W - left - 20 - fixed
-        title_w = max(220, min(spare, 420))
-        ctx_extra = max(0, spare - title_w)
-        widths = [title_w] + [c[2] for c in self.COLS[1:-1]] + [self.COLS[-1][2] + ctx_extra]
+        is_sess = self.tab == "sessions"
+        txt(p, QRectF(18, 14, 100, 18), "会话用量排行",
+            F(13, QFont.DemiBold if is_sess else QFont.Normal),
+            INK if is_sess else INK3)
+        txt(p, QRectF(128, 14, 140, 18), "模型用量与积分明细",
+            F(13, QFont.DemiBold if not is_sess else QFont.Normal),
+            INK if not is_sess else INK3)
 
-        # 表头
+        ind_x = 18 if is_sess else 128
+        ind_w = 82 if is_sess else 128
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(INDIGO))
+        p.drawPath(rr(QRectF(ind_x, 34, ind_w, 2.5), 1.2))
+
+        txt(p, QRectF(W - 260, 15, 242, 16),
+            "上下文占用为当前窗口" if is_sess else "按模型查看累计消耗与积分",
+            F(10), INK3, Qt.AlignRight | Qt.AlignVCenter)
+
         y = 44
-        x = left
+        left = 20
         p.setPen(QPen(LINE2, 1))
         p.drawLine(QPointF(18, y), QPointF(W - 18, y))
-        for i, (name, _, _) in enumerate(self.COLS):
-            align = Qt.AlignLeft | Qt.AlignVCenter
-            if i >= 2:
-                align = Qt.AlignRight | Qt.AlignVCenter
-            txt(p, QRectF(x, y + 5, widths[i] - 8, 16), name, F(10), INK3, align)
-            x += widths[i]
 
-        if not self.rows:
-            txt(p, QRectF(18, y + 50, W - 36, 20), "当前范围还没有调用记录", F(11), INK3,
-                Qt.AlignHCenter)
-            p.end()
-            return
+        if is_sess:
+            fixed = sum(c[2] for c in self.COLS[1:])
+            spare = W - left - 20 - fixed
+            title_w = max(220, min(spare, 420))
+            ctx_extra = max(0, spare - title_w)
+            widths = [title_w] + [c[2] for c in self.COLS[1:-1]] + [self.COLS[-1][2] + ctx_extra]
 
-        for ri, r in enumerate(self.rows):
-            ry = y + 26 + ri * 42
-            if self.hover == ri:
-                p.fillPath(rr(QRectF(10, ry - 4, W - 20, 40), 8),
-                           QBrush(QColor(99, 102, 241, 9)))
             x = left
+            for i, (name, _, _) in enumerate(self.COLS):
+                align = Qt.AlignLeft | Qt.AlignVCenter
+                if i >= 2:
+                    align = Qt.AlignRight | Qt.AlignVCenter
+                txt(p, QRectF(x, y + 5, widths[i] - 8, 16), name, F(10), INK3, align)
+                x += widths[i]
 
-            # 排名
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(INDIGO if ri == 0 else QColor("#eef2f7")))
-            p.drawPath(rr(QRectF(x, ry + 6, 17, 17), 5))
-            txt(p, QRectF(x, ry + 6, 17, 17), str(ri + 1), NUM(9, QFont.Bold),
-                QColor("#ffffff") if ri == 0 else INK3, Qt.AlignCenter)
+            if not self.rows:
+                txt(p, QRectF(18, y + 50, W - 36, 20), "当前范围还没有会话记录", F(11), INK3,
+                    Qt.AlignHCenter)
+                p.end()
+                return
 
-            # 标题 + 路径
-            tw = widths[0] - 28
-            name = r["title"]
-            fm = QFontMetrics(F(11))
-            while fm.width(name) > tw and len(name) > 4:
-                name = name[:-2] + "…"
-            txt(p, QRectF(x + 24, ry + 1, tw, 17), name, F(12), INK)
-            path = re.sub(r"^/home/[^/]+", "~", r.get("cwd", "")) if r.get("cwd") else ""
-            fm2 = QFontMetrics(F(9))
-            while fm2.width(path) > tw and len(path) > 6:
-                path = path[:-2] + "…"
-            txt(p, QRectF(x + 24, ry + 19, tw, 14), path, F(9), INK3)
-            x += widths[0]
+            for ri, r in enumerate(self.rows):
+                ry = y + 26 + ri * 42
+                if self.hover == ri:
+                    p.fillPath(rr(QRectF(10, ry - 4, W - 20, 40), 8),
+                               QBrush(QColor(99, 102, 241, 9)))
+                x = left
 
-            # 模型
-            mw = widths[1] - 10
-            mn = r["model"]
-            fmm = QFontMetrics(F(9))
-            while fmm.width(mn) > mw - 14 and len(mn) > 5:
-                mn = mn[:-2]
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(QColor("#f1f5f9")))
-            p.drawPath(rr(QRectF(x, ry + 9, min(mw, fmm.width(mn) + 16), 17), 5))
-            txt(p, QRectF(x + 7, ry + 9, mw, 17), mn, F(9), INK2)
-            x += widths[1]
-
-            txt(p, QRectF(x, ry + 8, widths[2] - 8, 18), compact(r["tokens"]),
-                NUM(11), INK2, Qt.AlignRight | Qt.AlignVCenter)
-            x += widths[2]
-            txt(p, QRectF(x, ry + 8, widths[3] - 8, 18), str(r["calls"]),
-                NUM(11), INK2, Qt.AlignRight | Qt.AlignVCenter)
-            x += widths[3]
-
-            # 命中率 pill
-            hr = r["hit_rate"]
-            col = EMERALD if hr >= 0.9 else (AMBER if hr >= 0.6 else ROSE)
-            bg = QColor(col)
-            bg.setAlpha(26)
-            pill = QRectF(x + widths[4] - 60, ry + 9, 50, 18)
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(bg))
-            p.drawPath(rr(pill, 9))
-            txt(p, pill, "%.1f%%" % (hr * 100), NUM(9), col, Qt.AlignCenter)
-            x += widths[4]
-
-            txt(p, QRectF(x, ry + 8, widths[5] - 8, 18),
-                "%.0f" % r["speed"] if r["speed"] else "—", NUM(10), INK2,
-                Qt.AlignRight | Qt.AlignVCenter)
-            x += widths[5]
-            txt(p, QRectF(x, ry + 8, widths[6] - 8, 18),
-                "%.2f" % r["credit"] if r["credit"] else "—", NUM(10), INK2,
-                Qt.AlignRight | Qt.AlignVCenter)
-            x += widths[6]
-
-            # 上下文条
-            used, size = r["used"], r["size"]
-            if used > 0 and size > 0:
-                ratio = min(1.0, used / float(size))
-                bw = min(widths[7] - 16, 120)
                 p.setPen(Qt.NoPen)
-                p.setBrush(QBrush(QColor("#eef2f7")))
-                p.drawPath(rr(QRectF(x, ry + 8, bw, 5), 2.5))
-                p.setBrush(QBrush(INDIGO))
-                p.drawPath(rr(QRectF(x, ry + 8, max(3.0, bw * ratio), 5), 2.5))
-                txt(p, QRectF(x, ry + 18, bw, 14),
-                    "%s / %s · %.0f%%" % (compact(used), compact(size), ratio * 100),
-                    NUM(8), INK3)
-            else:
-                txt(p, QRectF(x, ry + 10, widths[7] - 16, 16), "—", NUM(9), INK3)
+                p.setBrush(QBrush(INDIGO if ri == 0 else QColor("#eef2f7")))
+                p.drawPath(rr(QRectF(x, ry + 6, 17, 17), 5))
+                txt(p, QRectF(x, ry + 6, 17, 17), str(ri + 1), NUM(9, QFont.Bold),
+                    QColor("#ffffff") if ri == 0 else INK3, Qt.AlignCenter)
+
+                tw = widths[0] - 28
+                name = r["title"]
+                fm = QFontMetrics(F(11))
+                while fm.width(name) > tw and len(name) > 4:
+                    name = name[:-2] + "…"
+                txt(p, QRectF(x + 24, ry + 1, tw, 17), name, F(12), INK)
+                path = re.sub(r"^/home/[^/]+", "~", r.get("cwd", "")) if r.get("cwd") else ""
+                fm2 = QFontMetrics(F(9))
+                while fm2.width(path) > tw and len(path) > 6:
+                    path = path[:-2] + "…"
+                txt(p, QRectF(x + 24, ry + 19, tw, 14), path, F(9), INK3)
+                x += widths[0]
+
+                mw = widths[1] - 10
+                mn = r["model"]
+                fmm = QFontMetrics(F(9))
+                while fmm.width(mn) > mw - 14 and len(mn) > 5:
+                    mn = mn[:-2]
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(QColor("#f1f5f9")))
+                p.drawPath(rr(QRectF(x, ry + 9, min(mw, fmm.width(mn) + 16), 17), 5))
+                txt(p, QRectF(x + 7, ry + 9, mw, 17), mn, F(9), INK2)
+                x += widths[1]
+
+                txt(p, QRectF(x, ry + 8, widths[2] - 8, 18), compact(r["tokens"]),
+                    NUM(11), INK2, Qt.AlignRight | Qt.AlignVCenter)
+                x += widths[2]
+                txt(p, QRectF(x, ry + 8, widths[3] - 8, 18), str(r["calls"]),
+                    NUM(11), INK2, Qt.AlignRight | Qt.AlignVCenter)
+                x += widths[3]
+
+                hr = r["hit_rate"]
+                col = EMERALD if hr >= 0.9 else (AMBER if hr >= 0.6 else ROSE)
+                bg = QColor(col)
+                bg.setAlpha(26)
+                pill = QRectF(x + widths[4] - 60, ry + 9, 50, 18)
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(bg))
+                p.drawPath(rr(pill, 9))
+                txt(p, pill, "%.1f%%" % (hr * 100), NUM(9), col, Qt.AlignCenter)
+                x += widths[4]
+
+                txt(p, QRectF(x, ry + 8, widths[5] - 8, 18),
+                    "%.0f" % r["speed"] if r["speed"] else "—", NUM(10), INK2,
+                    Qt.AlignRight | Qt.AlignVCenter)
+                x += widths[5]
+                txt(p, QRectF(x, ry + 8, widths[6] - 8, 18),
+                    "%.2f" % r["credit"] if r["credit"] else "—", NUM(10), INK2,
+                    Qt.AlignRight | Qt.AlignVCenter)
+                x += widths[6]
+
+                used, size = r["used"], r["size"]
+                if used > 0 and size > 0:
+                    ratio = min(1.0, used / float(size))
+                    bw = min(widths[7] - 16, 120)
+                    p.setPen(Qt.NoPen)
+                    p.setBrush(QBrush(QColor("#eef2f7")))
+                    p.drawPath(rr(QRectF(x, ry + 8, bw, 5), 2.5))
+                    p.setBrush(QBrush(INDIGO))
+                    p.drawPath(rr(QRectF(x, ry + 8, max(3.0, bw * ratio), 5), 2.5))
+                    txt(p, QRectF(x, ry + 18, bw, 14),
+                        "%s / %s · %.0f%%" % (compact(used), compact(size), ratio * 100),
+                        NUM(8), INK3)
+                else:
+                    txt(p, QRectF(x, ry + 10, widths[7] - 16, 16), "—", NUM(9), INK3)
+        else:
+            # 模型明细表
+            m_fixed = sum(c[2] for c in self.MODEL_COLS[1:])
+            m_widths = [max(180, W - left - 20 - m_fixed)] + [c[2] for c in self.MODEL_COLS[1:]]
+
+            x = left
+            for i, (name, _, _) in enumerate(self.MODEL_COLS):
+                align = Qt.AlignLeft | Qt.AlignVCenter
+                if i >= 1:
+                    align = Qt.AlignRight | Qt.AlignVCenter
+                txt(p, QRectF(x, y + 5, m_widths[i] - 8, 16), name, F(10), INK3, align)
+                x += m_widths[i]
+
+            if not self.models:
+                txt(p, QRectF(18, y + 50, W - 36, 20), "当前范围还没有模型调用记录", F(11), INK3,
+                    Qt.AlignHCenter)
+                p.end()
+                return
+
+            for ri, m in enumerate(self.models[:8]):
+                ry = y + 26 + ri * 42
+                if self.hover == ri:
+                    p.fillPath(rr(QRectF(10, ry - 4, W - 20, 40), 8),
+                               QBrush(QColor(99, 102, 241, 9)))
+                x = left
+
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(INDIGO if ri == 0 else QColor("#eef2f7")))
+                p.drawPath(rr(QRectF(x, ry + 6, 17, 17), 5))
+                txt(p, QRectF(x, ry + 6, 17, 17), str(ri + 1), NUM(9, QFont.Bold),
+                    QColor("#ffffff") if ri == 0 else INK3, Qt.AlignCenter)
+
+                tw = m_widths[0] - 28
+                mname = m["name"]
+                fmm = QFontMetrics(F(11, QFont.DemiBold))
+                while fmm.width(mname) > tw - 10 and len(mname) > 4:
+                    mname = mname[:-2] + "…"
+                txt(p, QRectF(x + 24, ry + 8, tw, 18), mname, F(11, QFont.DemiBold), INK)
+                x += m_widths[0]
+
+                txt(p, QRectF(x, ry + 8, m_widths[1] - 8, 18), compact(m["tokens"]),
+                    NUM(11, QFont.DemiBold), INK, Qt.AlignRight | Qt.AlignVCenter)
+                x += m_widths[1]
+
+                txt(p, QRectF(x, ry + 8, m_widths[2] - 8, 18),
+                    "%s / %s" % (compact(m["in"]), compact(m["out"])),
+                    NUM(10), INK2, Qt.AlignRight | Qt.AlignVCenter)
+                x += m_widths[2]
+
+                hr = m.get("hit_rate", 0.0)
+                col = EMERALD if hr >= 0.9 else (AMBER if hr >= 0.6 else ROSE)
+                bg = QColor(col)
+                bg.setAlpha(26)
+                pill = QRectF(x + m_widths[3] - 62, ry + 9, 52, 18)
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(bg))
+                p.drawPath(rr(pill, 9))
+                txt(p, pill, "%.1f%%" % (hr * 100), NUM(9), col, Qt.AlignCenter)
+                x += m_widths[3]
+
+                txt(p, QRectF(x, ry + 8, m_widths[4] - 8, 18), str(m["calls"]),
+                    NUM(11), INK2, Qt.AlignRight | Qt.AlignVCenter)
+                x += m_widths[4]
+
+                spd = m.get("speed", 0.0)
+                txt(p, QRectF(x, ry + 8, m_widths[5] - 8, 18),
+                    "%.0f" % spd if spd else "—", NUM(10), INK2,
+                    Qt.AlignRight | Qt.AlignVCenter)
+                x += m_widths[5]
+
+                txt(p, QRectF(x, ry + 8, m_widths[6] - 8, 18),
+                    "%.2f 分" % m["credit"], NUM(11, QFont.DemiBold), AMBER,
+                    Qt.AlignRight | Qt.AlignVCenter)
+                x += m_widths[6]
+
+                c_share = m.get("credit_share", 0.0) * 100
+                txt(p, QRectF(x, ry + 8, m_widths[7] - 8, 18),
+                    "%.1f%%" % c_share, NUM(10), INK3,
+                    Qt.AlignRight | Qt.AlignVCenter)
 
         p.end()
 
@@ -1079,6 +1221,110 @@ class StreamCard(Card):
         p.end()
 
 
+# ---------------------------------------------------------------- 自定义时间对话框
+
+class CustomDateDialog(QDialog):
+    def __init__(self, parent=None, initial_start=None, initial_end=None):
+        super(CustomDateDialog, self).__init__(parent)
+        self.setWindowTitle("选定查询时间")
+        self.setFixedSize(360, 230)
+        self.setStyleSheet("QDialog { background: #ffffff; }")
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(18, 16, 18, 16)
+        lay.setSpacing(12)
+
+        title = QLabel("选择用量查询起止日期")
+        title.setFont(F(12, QFont.DemiBold))
+        title.setStyleSheet("color: #0f172a;")
+        lay.addWidget(title)
+
+        pre_lay = QHBoxLayout()
+        pre_lay.setSpacing(6)
+        today_d = QDate.currentDate()
+        for lbl, s_d, e_d in [
+            ("今日", today_d, today_d),
+            ("昨日", today_d.addDays(-1), today_d.addDays(-1)),
+            ("近 7 天", today_d.addDays(-6), today_d),
+            ("近 30 天", today_d.addDays(-29), today_d),
+            ("本月", QDate(today_d.year(), today_d.month(), 1), today_d),
+        ]:
+            b = QPushButton(lbl)
+            b.setFont(F(10))
+            b.setCursor(Qt.PointingHandCursor)
+            b.setFixedHeight(26)
+            b.setStyleSheet("""
+                QPushButton { border: 1px solid #e2e8f0; background: #f8fafc; color: #475569;
+                              border-radius: 6px; padding: 0 8px; }
+                QPushButton:hover { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+            """)
+            b.clicked.connect(lambda _=False, sd=s_d, ed=e_d: self._set_dates(sd, ed))
+            pre_lay.addWidget(b)
+        lay.addLayout(pre_lay)
+
+        form_lay = QHBoxLayout()
+        form_lay.setSpacing(8)
+
+        self.start_edit = QDateEdit(self)
+        self.start_edit.setCalendarPopup(True)
+        self.start_edit.setDate(initial_start or today_d.addDays(-7))
+        self.start_edit.setFont(F(11))
+        self.start_edit.setFixedHeight(32)
+        self.start_edit.setStyleSheet("QDateEdit { border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; color: #0f172a; }")
+
+        sep = QLabel("至")
+        sep.setFont(F(11))
+        sep.setStyleSheet("color: #94a3b8;")
+
+        self.end_edit = QDateEdit(self)
+        self.end_edit.setCalendarPopup(True)
+        self.end_edit.setDate(initial_end or today_d)
+        self.end_edit.setFont(F(11))
+        self.end_edit.setFixedHeight(32)
+        self.end_edit.setStyleSheet("QDateEdit { border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; color: #0f172a; }")
+
+        form_lay.addWidget(self.start_edit, 1)
+        form_lay.addWidget(sep)
+        form_lay.addWidget(self.end_edit, 1)
+        lay.addLayout(form_lay)
+
+        btn_box = QHBoxLayout()
+        btn_box.setSpacing(8)
+        btn_box.addStretch(1)
+
+        cancel_b = QPushButton("取消")
+        cancel_b.setFixedHeight(30)
+        cancel_b.setFont(F(11))
+        cancel_b.setCursor(Qt.PointingHandCursor)
+        cancel_b.setStyleSheet("QPushButton { border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; padding: 0 14px; } QPushButton:hover { background: #f8fafc; }")
+        cancel_b.clicked.connect(self.reject)
+        btn_box.addWidget(cancel_b)
+
+        ok_b = QPushButton("确定查询")
+        ok_b.setFixedHeight(30)
+        ok_b.setFont(F(11, QFont.DemiBold))
+        ok_b.setCursor(Qt.PointingHandCursor)
+        ok_b.setStyleSheet("QPushButton { border: none; border-radius: 7px; background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #6366f1, stop:1 #8b5cf6); color: #fff; padding: 0 16px; } QPushButton:hover { opacity: 0.92; }")
+        ok_b.clicked.connect(self.accept)
+        btn_box.addWidget(ok_b)
+
+        lay.addLayout(btn_box)
+
+    def _set_dates(self, s, e):
+        self.start_edit.setDate(s)
+        self.end_edit.setDate(e)
+
+    def get_range(self):
+        s = self.start_edit.date()
+        e = self.end_edit.date()
+        if s > e:
+            s, e = e, s
+        s_ms = int(time.mktime((s.year(), s.month(), s.day(), 0, 0, 0, 0, 0, -1)) * 1000)
+        e_ms = int(time.mktime((e.year(), e.month(), e.day(), 23, 59, 59, 0, 0, -1)) * 1000) + 999
+        lbl = "%d/%d~%d/%d" % (s.month(), s.day(), e.month(), e.day()) if s != e else "%d/%d" % (s.month(), s.day())
+        return s_ms, e_ms, lbl
+
+
 # ---------------------------------------------------------------- 头部
 
 def layers_icon(color, size=16, dpr=2.0):
@@ -1098,7 +1344,8 @@ def layers_icon(color, size=16, dpr=2.0):
 
 class Header(QWidget):
     def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0,
-                 on_mini=None, on_refresh=None, refresh_ms=1600):
+                 on_mini=None, on_refresh=None, refresh_ms=1600,
+                 on_model=None, on_custom_range=None):
         super(Header, self).__init__()
         self.range = "today"
         self.on_range = on_range
@@ -1106,6 +1353,9 @@ class Header(QWidget):
         self.on_mini = on_mini
         self.on_refresh = on_refresh
         self.refresh_ms = refresh_ms
+        self.on_model = on_model
+        self.on_custom_range = on_custom_range
+        self.current_model = None
         self.scale = scale
         self.status = "正在读取本地记录…"
         self.icon = QPixmap(icon_path) if icon_path and os.path.exists(icon_path) else None
@@ -1116,6 +1366,7 @@ class Header(QWidget):
         lay.setSpacing(6)
 
         self.spacer = QWidget()
+        self.spacer.setMinimumWidth(200)
         lay.addWidget(self.spacer, 1)
 
         # 自己在 paintEvent 里画品牌区，这里只放按钮
@@ -1123,16 +1374,17 @@ class Header(QWidget):
         self.spacer2.setFixedWidth(4)
         lay.addWidget(self.spacer2)
 
-        for key, label in (("today", "今日"), ("7d", "近 7 天"), ("all", "全部")):
+        for key, label in (("today", "今日"), ("yesterday", "昨日"), ("7d", "近 7 天"),
+                           ("30d", "近 30 天"), ("all", "全部")):
             b = QPushButton(label)
             b.setCheckable(True)
             b.setCursor(Qt.PointingHandCursor)
             b.setFixedHeight(30)
-            b.setMinimumWidth(66)
+            b.setMinimumWidth(56)
             b.setFont(F(11))
             b.setStyleSheet("""
                 QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
-                              border-radius: 9px; padding: 0 12px; }
+                              border-radius: 9px; padding: 0 9px; }
                 QPushButton:hover { background: #f7f8fc; }
                 QPushButton:checked { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
                               stop:0 #6366f1, stop:1 #8b5cf6); color: #ffffff; border: none; }
@@ -1141,6 +1393,43 @@ class Header(QWidget):
             self.buttons.append((key, b))
             lay.addWidget(b)
         self.buttons[0][1].setChecked(True)
+
+        self.custom_btn = QPushButton("自定义 ▾")
+        self.custom_btn.setCheckable(True)
+        self.custom_btn.setCursor(Qt.PointingHandCursor)
+        self.custom_btn.setFixedHeight(30)
+        self.custom_btn.setFont(F(11))
+        self.custom_btn.setStyleSheet("""
+            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+                          border-radius: 9px; padding: 0 10px; }
+            QPushButton:hover { background: #f7f8fc; }
+            QPushButton:checked { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
+                          stop:0 #6366f1, stop:1 #8b5cf6); color: #ffffff; border: none; }
+        """)
+        self.custom_btn.clicked.connect(self._on_click_custom)
+        lay.addWidget(self.custom_btn)
+
+        # 模型筛选
+        self.model_btn = QPushButton("模型: 全部 ▾")
+        self.model_btn.setFixedHeight(30)
+        self.model_btn.setFont(F(11))
+        self.model_btn.setCursor(Qt.PointingHandCursor)
+        self.model_btn.setStyleSheet("""
+            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+                          border-radius: 9px; padding: 0 10px; }
+            QPushButton:hover { background: #f7f8fc; }
+            QPushButton::menu-indicator { image: none; width: 0px; }
+        """)
+        self.model_menu = QMenu(self.model_btn)
+        self.model_menu.setFont(F(11))
+        self.model_menu.setStyleSheet("""
+            QMenu { background: #ffffff; border: 1px solid #e8ecf4; border-radius: 10px;
+                    padding: 6px; }
+            QMenu::item { padding: 7px 22px 7px 14px; border-radius: 6px; color: #334155; }
+            QMenu::item:selected { background: #eef2ff; color: #4f46e5; }
+        """)
+        self.model_btn.setMenu(self.model_menu)
+        lay.addWidget(self.model_btn)
 
         # 切换悬浮窗（用浅紫底突出，与普通按钮区分）
         self.mini_btn = QPushButton(" 悬浮")
@@ -1225,11 +1514,59 @@ class Header(QWidget):
                                 "border-radius:10px; padding:4px 10px;")
         lay.addWidget(self.live)
 
+    def _on_click_custom(self):
+        dlg = CustomDateDialog(self)
+        if dlg.exec_() == QDialog.Accepted:
+            s_ms, e_ms, lbl = dlg.get_range()
+            self.range = "custom"
+            for _, b in self.buttons:
+                b.setChecked(False)
+            self.custom_btn.setChecked(True)
+            self.custom_btn.setText(lbl + " ▾")
+            if self.on_custom_range:
+                self.on_custom_range(s_ms, e_ms, lbl)
+        else:
+            if self.range != "custom":
+                self.custom_btn.setChecked(False)
+
     def _pick(self, key):
         self.range = key
         for k, b in self.buttons:
             b.setChecked(k == key)
+        self.custom_btn.setChecked(False)
+        self.custom_btn.setText("自定义 ▾")
         self.on_range(key)
+
+    def update_models_menu(self, models, current_model=None):
+        self.current_model = current_model
+        if current_model:
+            disp = current_model[:12] + "…" if len(current_model) > 13 else current_model
+            self.model_btn.setText("模型: %s ▾" % disp)
+            self.model_btn.setStyleSheet("""
+                QPushButton { border: 1px solid #c7d2fe; background: #eef2ff; color: #4f46e5;
+                              border-radius: 9px; padding: 0 10px; font-weight: bold; }
+                QPushButton::menu-indicator { image: none; width: 0px; }
+            """)
+        else:
+            self.model_btn.setText("模型: 全部 ▾")
+            self.model_btn.setStyleSheet("""
+                QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+                              border-radius: 9px; padding: 0 10px; }
+                QPushButton:hover { background: #f7f8fc; }
+                QPushButton::menu-indicator { image: none; width: 0px; }
+            """)
+        self.model_menu.clear()
+        act_all = self.model_menu.addAction("全部模型")
+        act_all.setCheckable(True)
+        act_all.setChecked(not current_model)
+        act_all.triggered.connect(lambda: self.on_model and self.on_model(None))
+        for m in models:
+            name = m["name"]
+            lbl = "%s (%s tok · %.1f分)" % (name, compact(m["tokens"]), m["credit"])
+            act = self.model_menu.addAction(lbl)
+            act.setCheckable(True)
+            act.setChecked(bool(current_model and current_model.lower() == name.lower()))
+            act.triggered.connect(lambda _=False, nm=name: self.on_model and self.on_model(nm))
 
     def _pick_scale(self, val):
         for v, act in self.scale_actions:
@@ -1261,8 +1598,13 @@ class Header(QWidget):
         if self.icon is not None:
             p.drawPixmap(QRectF(x, 10, 38, 38).toRect(), self.icon)
             x += 50
-        txt(p, QRectF(x, 10, 340, 22), "WorkBuddy 用量监视", F(16, QFont.DemiBold), INK)
-        txt(p, QRectF(x + 1, 33, 460, 16), self.status, F(10), INK3)
+        max_w = max(160, self.spacer.width() + 44)
+        txt(p, QRectF(x, 10, max_w, 22), "WorkBuddy 用量监视", F(16, QFont.DemiBold), INK)
+        font10 = F(10)
+        p.setFont(font10)
+        metrics = QFontMetrics(font10)
+        elided = metrics.elidedText(self.status, Qt.ElideRight, max_w)
+        txt(p, QRectF(x + 1, 33, max_w, 16), elided, font10, INK3)
         p.end()
 
 
@@ -1461,6 +1803,9 @@ class MainWindow(QMainWindow):
         self.collector = collector
         self.range = "today"
         self.speed_span = 60
+        self.custom_start = None
+        self.custom_end = None
+        self.model_filter = None
         self.paused = False
         self.last = None
         self.mini = None
@@ -1479,13 +1824,13 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(icon))
         scr = QApplication.primaryScreen()
         area = scr.availableGeometry() if scr else None
-        if area and area.width() > 200:
+        if area and area.width() > 800:
             w = min(1340, int(area.width() * 0.94))
             h = min(980, int(area.height() * 0.94))
         else:
-            w, h = 1280, 880
-        self.resize(max(960, w), max(620, h))
-        self.setMinimumSize(min(960, w), min(620, h))
+            w, h = 1200, 840
+        self.resize(max(1040, w), max(640, h))
+        self.setMinimumSize(1000, 620)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -1508,7 +1853,9 @@ class MainWindow(QMainWindow):
         root.setSpacing(14)
 
         self.header = Header(self._on_range, icon, self._on_scale, load_ui_scale(),
-                             self._toggle_mini, self._on_refresh, self.refresh_ms)
+                             self._toggle_mini, self._on_refresh, self.refresh_ms,
+                             on_model=self._on_model_filter,
+                             on_custom_range=self._on_custom_range)
         root.addWidget(self.header)
 
         # KPI
@@ -1567,10 +1914,26 @@ class MainWindow(QMainWindow):
 
     def _on_range(self, key):
         self.range = key
+        self.custom_start = None
+        self.custom_end = None
+        self._last_version = -1
+        self.refresh()
+
+    def _on_custom_range(self, s_ms, e_ms, lbl):
+        self.range = "custom"
+        self.custom_start = s_ms
+        self.custom_end = e_ms
+        self._last_version = -1
+        self.refresh()
+
+    def _on_model_filter(self, model_name):
+        self.model_filter = model_name
+        self._last_version = -1
         self.refresh()
 
     def _on_span(self, mins):
         self.speed_span = mins
+        self._last_version = -1
         self.refresh()
 
     def _on_refresh(self, ms):
@@ -1635,7 +1998,10 @@ class MainWindow(QMainWindow):
             return
         try:
             self.collector.scan()
-            data = self.collector.snapshot(self.range, self.speed_span)
+            data = self.collector.snapshot(self.range, self.speed_span,
+                                           start_ms=self.custom_start,
+                                           end_ms=self.custom_end,
+                                           model=self.model_filter)
         except Exception as e:
             self.header.set_status("读取失败：%s" % e, ok=False)
             return
@@ -1672,14 +2038,16 @@ class MainWindow(QMainWindow):
         self.model_card.set_data(data["models"])
         self.usage_chart.set_data(data["series"])
         self.cache_chart.set_data(data["series"], k["hit_rate"])
-        self.session_table.set_data(data["sessions"])
+        self.session_table.set_data(data["sessions"], data.get("models"))
         self.stream_card.set_data(data["recent"])
+        self.header.update_models_menu(data.get("models", []), self.model_filter)
 
         t = time.localtime(data["generated_at"] / 1000.0)
+        filter_hint = " · 筛选模型: %s" % self.model_filter if self.model_filter else ""
         self.header.set_status(
-            "最近更新 %s · 每 %s 秒自动刷新 · %d 条调用记录"
+            "最近更新 %s · 每 %s 秒自动刷新 · %d 条调用记录%s"
             % (time.strftime("%H:%M:%S", t), fmt_sec(self.refresh_ms),
-               data["status"]["records"]))
+               data["status"]["records"], filter_hint))
         self.foot_label.setText(
             "数据源：%s　·　%d 个会话文件　·　%d 条调用记录"
             % (data["status"]["source"], data["status"]["files"], data["status"]["records"]))
@@ -1766,7 +2134,12 @@ def main():
         i = sys.argv.index("--range")
         if i + 1 < len(sys.argv):
             win.header._pick(sys.argv[i + 1])
+    if "--model" in sys.argv:
+        i = sys.argv.index("--model")
+        if i + 1 < len(sys.argv):
+            win._on_model_filter(sys.argv[i + 1])
     if shot:
+        win.resize(1180, 840)
         win.show()
         for _ in range(10):
             app.processEvents()
