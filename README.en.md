@@ -92,7 +92,7 @@ If PyQt5 is missing, the launcher falls back to `--web` instead of failing.
 | Live calls | The latest 6 calls with input/output, measured speed and credits |
 | Mini window | The "悬浮" button collapses everything into a 326×158 always-on-top card: the latest call's speed, today's tokens, a mini throughput curve, hit rate and credits |
 
-Use the top bar to switch between **Today / Yesterday / Last 7 days / Last 30 days / All / Custom ▾**, or filter by **Model: All ▾**. Charts show details on hover.
+The **Today ▾** menu at the top switches the time range (Today / Yesterday / Last 7 days / Last 30 days / All / Custom…), and **Model: All ▾** filters every card down to a single model. Charts show details on hover.
 
 <img src="screenshot-mini.png" width="374" alt="Mini window">
 

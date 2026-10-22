@@ -23,9 +23,9 @@ from PyQt5.QtGui import (QBrush, QColor, QFont, QFontMetrics, QIcon, QLinearGrad
                          QPainter, QPainterPath, QPen, QPixmap, QRadialGradient)
 from PyQt5.QtWidgets import (QApplication, QDateEdit, QDialog, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
                              QLabel, QMainWindow, QMenu, QPushButton, QScrollArea,
-                             QSizePolicy, QVBoxLayout, QWidget)
+                             QSizePolicy, QToolTip, QVBoxLayout, QWidget)
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -534,9 +534,23 @@ class UsageChart(Card):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         W = self.width()
-        txt(p, QRectF(18, 14, 200, 18), "Token 用量", F(13, QFont.DemiBold), INK)
-        txt(p, QRectF(W - 200, 15, 182, 16), "按小时" if self.gran == "hour" else "按天",
+        txt(p, QRectF(18, 14, 120, 18), "Token 用量", F(13, QFont.DemiBold), INK)
+        txt(p, QRectF(W - 64, 15, 46, 16), "按小时" if self.gran == "hour" else "按天",
             F(10), INK3, Qt.AlignRight | Qt.AlignVCenter)
+
+        # 三种堆叠成分的图例
+        items = (("命中", QColor("#06b6d4")),
+                 ("未命中", QColor("#f59e0b")),
+                 ("输出", QColor("#7c3aed")))
+        fm = QFontMetrics(F(9))
+        total_w = sum(fm.width(t) + 20 for t, _ in items)
+        lx = W - 72 - total_w
+        for lbl, col in items:
+            p.setPen(Qt.NoPen)
+            p.setBrush(QBrush(col))
+            p.drawEllipse(QPointF(lx + 3.5, 22), 3.2, 3.2)
+            txt(p, QRectF(lx + 10, 14, fm.width(lbl) + 6, 16), lbl, F(9), INK3)
+            lx += fm.width(lbl) + 20
 
         rect = self._plot()
         n = len(self.buckets)
@@ -625,20 +639,44 @@ class ModelCard(Card):
         self.breakdown = None
         self.selected_model = None
         self.metric = "tokens"  # "tokens" | "credit"
+        self._user_toggled = False
         self.setMinimumHeight(250)
         self.setMinimumWidth(300)
         self.setCursor(Qt.PointingHandCursor)
 
     def set_data(self, models, breakdown=None, selected_model=None):
+        prev = self.selected_model
         self.models = models
         self.breakdown = breakdown
         self.selected_model = selected_model
+        # 选中模型且 token 结构极度倾斜（某段 ≥90%）时，默认切到「积分构成」更可读；
+        # 用户手动切换过则尊重其选择
+        if breakdown and selected_model != prev and not self._user_toggled:
+            parts = breakdown.get("token_parts") or []
+            top = max([p.get("share", 0) for p in parts] or [0])
+            self.metric = "credit" if top >= 0.9 else "tokens"
+        elif not selected_model and not self._user_toggled:
+            self.metric = "tokens"
         self.update()
+
+    def mouseMoveEvent(self, e):
+        # 「加权均价」容易被误读成某一类 token 的单价，悬停给出算法说明
+        r = getattr(self, "_avg_rect", None)
+        if r is not None and r.contains(QPointF(e.pos())):
+            QToolTip.showText(
+                e.globalPos(),
+                "加权均价 = 总积分 ÷ 总 Token × 1,000,000\n"
+                "受缓存命中率与输入/输出结构影响，不等于任何单一费率",
+                self)
+        else:
+            QToolTip.hideText()
+        super(ModelCard, self).mouseMoveEvent(e)
 
     def mousePressEvent(self, e):
         # 点击右上角度量标签或标题切换度量（Token <-> 积分）
         if e.y() < 42 and e.x() > self.width() - 130:
             self.metric = "credit" if self.metric == "tokens" else "tokens"
+            self._user_toggled = True
             self.update()
         super(ModelCard, self).mousePressEvent(e)
 
@@ -647,6 +685,7 @@ class ModelCard(Card):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         W, H = self.width(), self.height()
+        self._avg_rect = None
 
         if self.breakdown and self.selected_model:
             sm = self.selected_model
@@ -751,9 +790,10 @@ class ModelCard(Card):
 
             avg_p = self.breakdown.get("avg_price", 0.0)
             txt(p, QRectF(lx + 13, ly + 4, lw - 13, 14),
-                "综合单价 ~%.2f 分/Mtok" % avg_p, F(9, QFont.DemiBold), QColor("#4f46e5"))
+                "加权均价 %.2f 分/Mtok" % avg_p, F(9, QFont.DemiBold), QColor("#4f46e5"))
             txt(p, QRectF(lx + 13, ly + 18, lw - 13, 13),
-                "* 估算价格 = 积分 / 1M Token", F(8), INK3)
+                "* 总积分 ÷ 总 Token，非单段费率", F(8), INK3)
+            self._avg_rect = QRectF(lx + 10, ly + 2, lw - 10, 32)
         else:
             models_sorted = sorted(self.models, key=lambda x: -(x["credit"] if is_credit else x["tokens"]))
             for i, m in enumerate(models_sorted[:5]):
@@ -1404,6 +1444,9 @@ def layers_icon(color, size=16, dpr=2.0):
 
 
 class Header(QWidget):
+    RANGES = (("today", "今日"), ("yesterday", "昨日"), ("7d", "近 7 天"),
+              ("30d", "近 30 天"), ("all", "全部"))
+
     def __init__(self, on_range, icon_path=None, on_scale=None, scale=1.0,
                  on_mini=None, on_refresh=None, refresh_ms=1600,
                  on_model=None, on_custom_range=None):
@@ -1417,11 +1460,11 @@ class Header(QWidget):
         self.on_model = on_model
         self.on_custom_range = on_custom_range
         self.current_model = None
+        self.custom_label = None
         self.scale = scale
         self.status = "正在读取本地记录…"
         self.icon = QPixmap(icon_path) if icon_path and os.path.exists(icon_path) else None
         self.setFixedHeight(62)
-        self.buttons = []
         lay = QHBoxLayout(self)
         lay.setContentsMargins(2, 4, 2, 4)
         lay.setSpacing(6)
@@ -1435,40 +1478,38 @@ class Header(QWidget):
         self.spacer2.setFixedWidth(4)
         lay.addWidget(self.spacer2)
 
-        for key, label in (("today", "今日"), ("yesterday", "昨日"), ("7d", "近 7 天"),
-                           ("30d", "近 30 天"), ("all", "全部")):
-            b = QPushButton(label)
-            b.setCheckable(True)
-            b.setCursor(Qt.PointingHandCursor)
-            b.setFixedHeight(30)
-            b.setMinimumWidth(56)
-            b.setFont(F(11))
-            b.setStyleSheet("""
-                QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
-                              border-radius: 9px; padding: 0 9px; }
-                QPushButton:hover { background: #f7f8fc; }
-                QPushButton:checked { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
-                              stop:0 #6366f1, stop:1 #8b5cf6); color: #ffffff; border: none; }
-            """)
-            b.clicked.connect(lambda _=False, k=key: self._pick(k))
-            self.buttons.append((key, b))
-            lay.addWidget(b)
-        self.buttons[0][1].setChecked(True)
-
-        self.custom_btn = QPushButton("自定义 ▾")
-        self.custom_btn.setCheckable(True)
-        self.custom_btn.setCursor(Qt.PointingHandCursor)
-        self.custom_btn.setFixedHeight(30)
-        self.custom_btn.setFont(F(11))
-        self.custom_btn.setStyleSheet("""
-            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #475569;
+        # 时间范围：合并成一个菜单，避免顶部按钮过度挤占模型筛选的宽度
+        self.range_btn = QPushButton("今日 ▾")
+        self.range_btn.setCursor(Qt.PointingHandCursor)
+        self.range_btn.setFixedHeight(30)
+        self.range_btn.setFont(F(11))
+        self.range_btn.setToolTip("统计时间范围")
+        self.range_btn.setStyleSheet("""
+            QPushButton { border: 1px solid #e8ecf4; background: #ffffff; color: #334155;
                           border-radius: 9px; padding: 0 10px; }
             QPushButton:hover { background: #f7f8fc; }
-            QPushButton:checked { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
-                          stop:0 #6366f1, stop:1 #8b5cf6); color: #ffffff; border: none; }
+            QPushButton::menu-indicator { image: none; width: 0px; }
         """)
-        self.custom_btn.clicked.connect(self._on_click_custom)
-        lay.addWidget(self.custom_btn)
+        self.range_menu = QMenu(self.range_btn)
+        self.range_menu.setFont(F(11))
+        self.range_menu.setStyleSheet("""
+            QMenu { background: #ffffff; border: 1px solid #e8ecf4; border-radius: 10px;
+                    padding: 6px; }
+            QMenu::item { padding: 7px 22px 7px 14px; border-radius: 6px; color: #334155; }
+            QMenu::item:selected { background: #eef2ff; color: #4f46e5; }
+            QMenu::separator { height: 1px; background: #eef2f8; margin: 5px 8px; }
+        """)
+        self.range_actions = []
+        for key, label in self.RANGES:
+            act = self.range_menu.addAction(label)
+            act.setCheckable(True)
+            act.setChecked(key == "today")
+            act.triggered.connect(lambda _=False, k=key: self._pick(k))
+            self.range_actions.append((key, act))
+        self.range_menu.addSeparator()
+        self.range_menu.addAction("自定义…").triggered.connect(self._on_click_custom)
+        self.range_btn.setMenu(self.range_menu)
+        lay.addWidget(self.range_btn)
 
         # 模型筛选
         self.model_btn = QPushButton("模型: 全部 ▾")
@@ -1580,22 +1621,27 @@ class Header(QWidget):
         if dlg.exec_() == QDialog.Accepted:
             s_ms, e_ms, lbl = dlg.get_range()
             self.range = "custom"
-            for _, b in self.buttons:
-                b.setChecked(False)
-            self.custom_btn.setChecked(True)
-            self.custom_btn.setText(lbl + " ▾")
+            self.custom_label = lbl
+            for _, act in self.range_actions:
+                act.setChecked(False)
+            self._sync_range_text()
             if self.on_custom_range:
                 self.on_custom_range(s_ms, e_ms, lbl)
         else:
-            if self.range != "custom":
-                self.custom_btn.setChecked(False)
+            self._sync_range_text()
+
+    def _sync_range_text(self):
+        if self.range == "custom" and self.custom_label:
+            self.range_btn.setText(self.custom_label + " ▾")
+        else:
+            self.range_btn.setText(dict(self.RANGES).get(self.range, "今日") + " ▾")
 
     def _pick(self, key):
         self.range = key
-        for k, b in self.buttons:
-            b.setChecked(k == key)
-        self.custom_btn.setChecked(False)
-        self.custom_btn.setText("自定义 ▾")
+        self.custom_label = None
+        for k, act in self.range_actions:
+            act.setChecked(k == key)
+        self._sync_range_text()
         self.on_range(key)
 
     def update_models_menu(self, models, current_model=None):

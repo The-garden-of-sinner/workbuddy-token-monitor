@@ -724,8 +724,8 @@
 
       box.innerHTML = rows +
         '<li class="breakdown-foot">' +
-        '<span class="avg-price">综合单价 ~' + avgPrice + ' 分/Mtok</span>' +
-        '<span class="foot-note">* 估算单价 = 积分 / 1M Token</span>' +
+        '<span class="avg-price" title="加权均价 = 总积分 ÷ 总 Token × 1,000,000；受缓存命中率与输入/输出结构影响，不等于任何单一费率">加权均价 ' + avgPrice + ' 分/Mtok</span>' +
+        '<span class="foot-note">* 总积分 ÷ 总 Token，非单段费率</span>' +
         '</li>';
       return;
     }
