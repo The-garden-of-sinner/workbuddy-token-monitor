@@ -607,7 +607,301 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
 }
 .tip.show { opacity: 1; transform: translate(-50%, -130%) scale(1); }
 .tip b { font-weight: 600; }
-.tip .k { color: #cbd5e1; }
+/* ---------------- 自定义时间与模型筛选增强 ---------------- */
+
+.range-box {
+  position: relative;
+}
+
+.custom-date-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, .18), 0 2px 6px rgba(15, 23, 42, .06);
+  animation: popIn .16s ease-out;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.pop-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.pop-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.preset-chip {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink2);
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.preset-chip:hover {
+  background: #eef2ff;
+  color: #4f46e5;
+  border-color: #c7d2fe;
+}
+
+.pop-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.input-group label {
+  font-size: 10.5px;
+  color: var(--ink3);
+}
+
+.input-group input[type="date"] {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink);
+  outline: none;
+  background: #fff;
+  transition: border-color .15s;
+}
+
+.input-group input[type="date"]:focus {
+  border-color: var(--indigo);
+}
+
+.input-sep {
+  font-size: 12px;
+  color: var(--ink3);
+  margin-top: 14px;
+}
+
+.pop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pop-actions button {
+  font-size: 12px;
+  padding: 5px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-cancel {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink2);
+}
+
+.btn-cancel:hover { background: #f8fafc; }
+
+.btn-apply {
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 2px 8px -2px rgba(99, 102, 241, .5);
+}
+
+.btn-apply:hover {
+  opacity: .95;
+}
+
+.model-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+#model-filter {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--line);
+  background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%2364748b" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
+  color: var(--ink2);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 28px 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: all .18s;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#model-filter:hover {
+  border-color: #cbd5e1;
+}
+
+#model-filter.active {
+  background-color: #eef2ff;
+  color: #4f46e5;
+  border-color: #a5b4fc;
+  font-weight: 500;
+}
+
+.filter-clear-btn {
+  position: absolute;
+  right: 24px;
+  border: none;
+  background: #cbd5e1;
+  color: #fff;
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  line-height: 14px;
+  font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.filter-clear-btn:hover {
+  background: #94a3b8;
+}
+
+/* ---------------- 模型卡片内度量切换 ---------------- */
+
+.card-seg {
+  display: inline-flex;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.card-seg button {
+  border: 0;
+  background: transparent;
+  color: var(--ink2);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.card-seg button.on {
+  background: #fff;
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+}
+
+/* ---------------- 表格选项卡切换 ---------------- */
+
+.tab-header {
+  display: inline-flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.tbl-tab {
+  border: none;
+  background: transparent;
+  padding: 0 0 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink3);
+  cursor: pointer;
+  position: relative;
+  transition: color .18s;
+}
+
+.tbl-tab:hover {
+  color: var(--ink2);
+}
+
+.tbl-tab.on {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.tbl-tab.on::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  border-radius: 2px;
+}
+
+/* ---------------- 模型明细表格 ---------------- */
+
+#tbl-models .btn-filter-this {
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+#tbl-models .btn-filter-this:hover {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+#tbl-models .credit-bar-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#tbl-models .credit-mini-bar {
+  width: 52px;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#tbl-models .credit-mini-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  border-radius: 3px;
+}
 
 /* ---------------- responsive ---------------- */
 
@@ -664,13 +958,50 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
       </div>
     </div>
 
-    <nav class="seg" id="range">
-      <button data-range="today" class="on">今日</button>
-      <button data-range="7d">近 7 天</button>
-      <button data-range="all">全部</button>
-    </nav>
+    <div class="range-box">
+      <nav class="seg" id="range">
+        <button data-range="today" class="on">今日</button>
+        <button data-range="yesterday">昨日</button>
+        <button data-range="7d">近 7 天</button>
+        <button data-range="30d">近 30 天</button>
+        <button data-range="all">全部</button>
+        <button data-range="custom" id="btn-custom-range">自定义 ▾</button>
+      </nav>
+
+      <div class="custom-date-popover" id="custom-date-popover" style="display:none">
+        <div class="pop-header">选定查询时间</div>
+        <div class="pop-presets">
+          <button type="button" class="preset-chip" data-preset="today">今日</button>
+          <button type="button" class="preset-chip" data-preset="yesterday">昨日</button>
+          <button type="button" class="preset-chip" data-preset="7d">近 7 天</button>
+          <button type="button" class="preset-chip" data-preset="30d">近 30 天</button>
+          <button type="button" class="preset-chip" data-preset="thismonth">本月</button>
+        </div>
+        <div class="pop-inputs">
+          <div class="input-group">
+            <label for="inp-start-date">开始日期</label>
+            <input type="date" id="inp-start-date">
+          </div>
+          <div class="input-sep">至</div>
+          <div class="input-group">
+            <label for="inp-end-date">结束日期</label>
+            <input type="date" id="inp-end-date">
+          </div>
+        </div>
+        <div class="pop-actions">
+          <button type="button" class="btn-cancel" id="btn-custom-cancel">取消</button>
+          <button type="button" class="btn-apply" id="btn-custom-apply">确定查询</button>
+        </div>
+      </div>
+    </div>
 
     <div class="top-right">
+      <div class="model-select-wrap">
+        <select id="model-filter" title="按模型筛选用量和积分">
+          <option value="">全部模型</option>
+        </select>
+        <button id="model-filter-clear" class="filter-clear-btn" title="清除模型筛选" style="display:none">×</button>
+      </div>
       <div class="live" id="livebadge"><i></i>实时</div>
       <button class="icon-btn" id="pause" title="暂停 / 继续刷新">
         <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>
@@ -734,10 +1065,16 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
     </article>
 
     <article class="card c-model">
-      <header><h2>模型分布</h2><span class="tag">按 token</span></header>
+      <header>
+        <h2>模型分布</h2>
+        <div class="card-seg" id="model-metric-toggle">
+          <button class="on" data-metric="tokens">按 Token</button>
+          <button data-metric="credit">按积分</button>
+        </div>
+      </header>
       <div class="donut-wrap">
         <canvas id="chart-models"></canvas>
-        <div class="donut-center"><b id="model-total">—</b><span>总 Token</span></div>
+        <div class="donut-center"><b id="model-total">—</b><span id="model-total-label">总 Token</span></div>
       </div>
       <ul class="legend" id="model-legend"></ul>
     </article>
@@ -761,10 +1098,13 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
 
   <section class="card c-sessions">
     <header>
-      <h2>会话用量排行</h2>
-      <span class="tag">上下文占用为当前窗口</span>
+      <div class="tab-header" id="table-tabs">
+        <button class="tbl-tab on" data-tab="sessions">会话用量排行</button>
+        <button class="tbl-tab" data-tab="models">模型用量与积分明细</button>
+      </div>
+      <span class="tag" id="table-tag">上下文占用为当前窗口</span>
     </header>
-    <div class="table-wrap">
+    <div class="table-wrap" id="wrap-sessions">
       <table id="tbl-sessions">
         <thead>
           <tr>
@@ -776,6 +1116,24 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
             <th class="num">速度</th>
             <th class="num">积分</th>
             <th class="col-ctx">上下文</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="table-wrap" id="wrap-models" style="display:none">
+      <table id="tbl-models">
+        <thead>
+          <tr>
+            <th class="col-title">模型名称</th>
+            <th class="num">Token 总量</th>
+            <th class="num">输入 / 输出</th>
+            <th class="num">缓存命中率</th>
+            <th class="num">调用次数</th>
+            <th class="num">平均速度</th>
+            <th class="num">积分消耗</th>
+            <th class="num">积分占比</th>
+            <th style="text-align:center;width:80px">操作</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -796,7 +1154,7 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
 </div>
 
 <div class="tip" id="tip"></div>
-<script>window.__WB_SNAPSHOT__ = {"generated_at": 1792592442797, "range": "all", "kpi": {"tokens": 75934516, "input": 75551148, "output": 383368, "cache_hit": 72451600, "cache_miss": 3099548, "hit_rate": 0.9589741773348037, "credit": 28.01, "calls": 423, "avg_speed": 110.5671379381055, "peak_speed": 202.65111346765642, "gen_seconds": 3467.3, "today_tokens": 16587812, "today_credit": 4.18, "today_calls": 61, "all_tokens": 75934516}, "series": {"granularity": "day", "buckets": [{"label": "10/15", "hit": 5158302, "miss": 211677, "out": 52950, "credit": 3.894000000000002, "calls": 61, "t": 1791993600000}, {"label": "10/16", "hit": 6751221, "miss": 292454, "out": 47646, "credit": 3.557999999999999, "calls": 60, "t": 1792080000000}, {"label": "10/17", "hit": 8981214, "miss": 389376, "out": 57230, "credit": 4.181000000000001, "calls": 63, "t": 1792166400000}, {"label": "10/18", "hit": 10231181, "miss": 471961, "out": 55112, "credit": 4.007000000000001, "calls": 59, "t": 1792252800000}, {"label": "10/19", "hit": 11488522, "miss": 532223, "out": 54702, "credit": 3.9549999999999996, "calls": 56, "t": 1792339200000}, {"label": "10/20", "hit": 13903170, "miss": 609557, "out": 58206, "credit": 4.24, "calls": 63, "t": 1792425600000}, {"label": "10/21", "hit": 15937990, "miss": 592300, "out": 57522, "credit": 4.1789999999999985, "calls": 61, "t": 1792512000000}]}, "speeds": [{"t": 1792588842797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792588902797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792588962797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589022797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589082797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589142797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589202797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589262797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589322797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589382797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589442797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589502797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589562797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589622797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589682797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589742797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589802797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589862797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589922797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792589982797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590042797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590102797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590162797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590222797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590282797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590342797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590402797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590462797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590522797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590582797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590642797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590702797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590762797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590822797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590882797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792590942797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591002797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591062797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591122797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591182797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591242797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591302797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591362797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591422797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591482797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591542797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591602797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591662797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591722797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591782797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591842797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591902797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792591962797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592022797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592082797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592142797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592202797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592262797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592322797, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792592382797, "v": 52.8, "out": 169, "calls": 1}], "models": [{"name": "DeepSeek-V4.1-Flash", "tokens": 36694179, "in": 36504529, "out": 189650, "calls": 206, "hit": 35036575, "credit": 13.82, "share": 0.4832345148548784}, {"name": "Claude-4.5-Sonnet", "tokens": 26146767, "in": 26013046, "out": 133721, "calls": 146, "hit": 24935641, "credit": 9.76, "share": 0.34433309616406854}, {"name": "Step-5-Preview", "tokens": 13093570, "in": 13033573, "out": 59997, "calls": 71, "hit": 12479384, "credit": 4.44, "share": 0.1724323889810531}], "sessions": [{"id": "demo-02", "title": "为 REST API 增加分页与限流", "cwd": "~/WorkBuddy/api-service", "model": "DeepSeek-V4.1-Flash", "tokens": 16933564, "in": 16848056, "out": 85508, "calls": 85, "hit_rate": 0.9600467852196123, "credit": 6.15, "speed": 114.45827482675583, "last": 1792592390782, "used": 259780, "size": 1000000, "active": true}, {"id": "demo-03", "title": "排查 CI 构建超时", "cwd": "~/WorkBuddy/ci-tools", "model": "Claude-4.5-Sonnet", "tokens": 14258664, "in": 14187240, "out": 71424, "calls": 77, "hit_rate": 0.9617406909307237, "credit": 5.2, "speed": 113.17741015402167, "last": 1792581022102, "used": 362263, "size": 1000000, "active": false}, {"id": "demo-05", "title": "整理组件库文档", "cwd": "~/WorkBuddy/ui-kit", "model": "Step-5-Preview", "tokens": 13093570, "in": 13033573, "out": 59997, "calls": 71, "hit_rate": 0.9574798867509317, "credit": 4.44, "speed": 103.36219579846122, "last": 1792582086841, "used": 257843, "size": 1000000, "active": false}, {"id": "demo-04", "title": "补充缓存层单元测试", "cwd": "~/WorkBuddy/api-service", "model": "Claude-4.5-Sonnet", "tokens": 11888103, "in": 11825806, "out": 62297, "calls": 69, "hit_rate": 0.954792848791871, "credit": 4.56, "speed": 112.67684605395004, "last": 1792582851587, "used": 63672, "size": 1000000, "active": false}, {"id": "demo-06", "title": "优化订单查询慢 SQL", "cwd": "~/WorkBuddy/order-center", "model": "DeepSeek-V4.1-Flash", "tokens": 11201085, "in": 11149117, "out": 51968, "calls": 66, "hit_rate": 0.9586460524183216, "credit": 3.88, "speed": 106.10868135951748, "last": 1792579790795, "used": 270013, "size": 1000000, "active": false}, {"id": "demo-01", "title": "重构日志采集模块", "cwd": "~/WorkBuddy/log-pipeline", "model": "DeepSeek-V4.1-Flash", "tokens": 8559530, "in": 8507356, "out": 52174, "calls": 55, "hit_rate": 0.9607680694213337, "credit": 3.79, "speed": 111.95128336072715, "last": 1792584228576, "used": 344364, "size": 1000000, "active": false}], "recent": [{"t": 1792592390782, "model": "DeepSeek-V4.1-Flash", "in": 335463, "out": 169, "hit": 313795, "miss": 21668, "credit": 0.02, "dur": 3200, "speed": 52.8, "tool": "Grep", "title": "为 REST API 增加分页与限流"}, {"t": 1792584228576, "model": "DeepSeek-V4.1-Flash", "in": 270217, "out": 1162, "hit": 267115, "miss": 3102, "credit": 0.082, "dur": 11180, "speed": 103.9, "tool": "Edit", "title": "重构日志采集模块"}, {"t": 1792582851587, "model": "Claude-4.5-Sonnet", "in": 279698, "out": 1032, "hit": 262903, "miss": 16795, "credit": 0.074, "dur": 13223, "speed": 78.0, "tool": "Glob", "title": "补充缓存层单元测试"}, {"t": 1792582086841, "model": "Step-5-Preview", "in": 279213, "out": 897, "hit": 271381, "miss": 7832, "credit": 0.066, "dur": 7436, "speed": 120.6, "tool": "Read", "title": "整理组件库文档"}, {"t": 1792581022102, "model": "Claude-4.5-Sonnet", "in": 325417, "out": 887, "hit": 311745, "miss": 13672, "credit": 0.065, "dur": 12496, "speed": 71.0, "tool": "Bash", "title": "排查 CI 构建超时"}, {"t": 1792580644966, "model": "Step-5-Preview", "in": 254397, "out": 2042, "hit": 237159, "miss": 17238, "credit": 0.137, "dur": 12800, "speed": 159.5, "tool": "TaskCreate", "title": "整理组件库文档"}, {"t": 1792579790795, "model": "DeepSeek-V4.1-Flash", "in": 280171, "out": 1524, "hit": 272979, "miss": 7192, "credit": 0.104, "dur": 11643, "speed": 130.9, "tool": "Grep", "title": "优化订单查询慢 SQL"}, {"t": 1792579487447, "model": "DeepSeek-V4.1-Flash", "in": 256695, "out": 339, "hit": 236987, "miss": 19708, "credit": 0.031, "dur": 2482, "speed": 136.6, "tool": "Edit", "title": "优化订单查询慢 SQL"}, {"t": 1792577990396, "model": "Claude-4.5-Sonnet", "in": 296427, "out": 1286, "hit": 272929, "miss": 23498, "credit": 0.09, "dur": 10299, "speed": 124.9, "tool": "Write", "title": "补充缓存层单元测试"}, {"t": 1792577932101, "model": "DeepSeek-V4.1-Flash", "in": 235204, "out": 252, "hit": 230813, "miss": 4391, "credit": 0.026, "dur": 4659, "speed": 54.1, "tool": "Grep", "title": "优化订单查询慢 SQL"}, {"t": 1792576823950, "model": "Step-5-Preview", "in": 242466, "out": 358, "hit": 235954, "miss": 6512, "credit": 0.032, "dur": 4495, "speed": 79.6, "tool": "Edit", "title": "整理组件库文档"}, {"t": 1792576573708, "model": "DeepSeek-V4.1-Flash", "in": 331087, "out": 814, "hit": 324572, "miss": 6515, "credit": 0.06, "dur": 7304, "speed": 111.4, "tool": "Write", "title": "为 REST API 增加分页与限流"}, {"t": 1792575947644, "model": "Step-5-Preview", "in": 298850, "out": 839, "hit": 285395, "miss": 13455, "credit": 0.062, "dur": 8555, "speed": 98.1, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792575488411, "model": "DeepSeek-V4.1-Flash", "in": 236650, "out": 780, "hit": 218663, "miss": 17987, "credit": 0.058, "dur": 6264, "speed": 124.5, "tool": "TaskCreate", "title": "优化订单查询慢 SQL"}, {"t": 1792573926979, "model": "Claude-4.5-Sonnet", "in": 278671, "out": 1398, "hit": 266582, "miss": 12089, "credit": 0.097, "dur": 10055, "speed": 139.0, "tool": "Read", "title": "排查 CI 构建超时"}, {"t": 1792573374728, "model": "DeepSeek-V4.1-Flash", "in": 222390, "out": 140, "hit": 205082, "miss": 17308, "credit": 0.019, "dur": 4137, "speed": 33.8, "tool": "Write", "title": "优化订单查询慢 SQL"}, {"t": 1792572719865, "model": "Claude-4.5-Sonnet", "in": 229443, "out": 1051, "hit": 219361, "miss": 10082, "credit": 0.075, "dur": 9654, "speed": 108.9, "tool": "Glob", "title": "补充缓存层单元测试"}, {"t": 1792570996096, "model": "Step-5-Preview", "in": 245578, "out": 140, "hit": 233576, "miss": 12002, "credit": 0.019, "dur": 4078, "speed": 34.3, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792570959694, "model": "Claude-4.5-Sonnet", "in": 310925, "out": 251, "hit": 295920, "miss": 15005, "credit": 0.026, "dur": 3923, "speed": 64.0, "tool": "Grep", "title": "排查 CI 构建超时"}, {"t": 1792570826049, "model": "DeepSeek-V4.1-Flash", "in": 303606, "out": 1150, "hit": 301921, "miss": 1685, "credit": 0.081, "dur": 9168, "speed": 125.4, "tool": "Edit", "title": "为 REST API 增加分页与限流"}, {"t": 1792570276981, "model": "Step-5-Preview", "in": 287802, "out": 812, "hit": 285388, "miss": 2414, "credit": 0.06, "dur": 8121, "speed": 100.0, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792569734959, "model": "DeepSeek-V4.1-Flash", "in": 288527, "out": 1142, "hit": 278811, "miss": 9716, "credit": 0.081, "dur": 11280, "speed": 101.2, "tool": "Write", "title": "优化订单查询慢 SQL"}, {"t": 1792569630425, "model": "DeepSeek-V4.1-Flash", "in": 302477, "out": 852, "hit": 281554, "miss": 20923, "credit": 0.063, "dur": 6880, "speed": 123.8, "tool": "Glob", "title": "为 REST API 增加分页与限流"}, {"t": 1792568829155, "model": "DeepSeek-V4.1-Flash", "in": 291630, "out": 774, "hit": 287571, "miss": 4059, "credit": 0.058, "dur": 6118, "speed": 126.5, "tool": "Grep", "title": "优化订单查询慢 SQL"}], "status": {"files": 6, "records": 423, "last_scan": 1792592442782, "sessions": 6, "source": "~/.workbuddy/projects（演示数据）"}};</script>
+<script>window.__WB_SNAPSHOT__ = {"generated_at": 1792660843837, "range": "all", "start": 1792109244131, "end": 1792660843837, "selected_model": null, "kpi": {"tokens": 72945015, "input": 72571467, "output": 373548, "cache_hit": 69622007, "cache_miss": 2949460, "hit_rate": 0.9593578561668045, "credit": 27.3, "calls": 412, "avg_speed": 110.75902733157821, "peak_speed": 202.65111346765642, "gen_seconds": 3372.6, "today_tokens": 13598311, "today_credit": 3.46, "today_calls": 50, "all_tokens": 72945015, "all_credit": 27.3}, "series": {"granularity": "day", "buckets": [{"label": "10/16", "hit": 5158302, "miss": 211677, "out": 52950, "credit": 3.894000000000002, "calls": 61, "t": 1792080000000}, {"label": "10/17", "hit": 6751221, "miss": 292454, "out": 47646, "credit": 3.557999999999999, "calls": 60, "t": 1792166400000}, {"label": "10/18", "hit": 8981214, "miss": 389376, "out": 57230, "credit": 4.181000000000001, "calls": 63, "t": 1792252800000}, {"label": "10/19", "hit": 10231181, "miss": 471961, "out": 55112, "credit": 4.007000000000001, "calls": 59, "t": 1792339200000}, {"label": "10/20", "hit": 11488522, "miss": 532223, "out": 54702, "credit": 3.9549999999999996, "calls": 56, "t": 1792425600000}, {"label": "10/21", "hit": 13903170, "miss": 609557, "out": 58206, "credit": 4.24, "calls": 63, "t": 1792512000000}, {"label": "10/22", "hit": 13108397, "miss": 442212, "out": 47702, "credit": 3.4609999999999994, "calls": 50, "t": 1792598400000}]}, "speeds": [{"t": 1792657243837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657303837, "v": 64.0, "out": 251, "calls": 1}, {"t": 1792657363837, "v": 34.3, "out": 140, "calls": 1}, {"t": 1792657423837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657483837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657543837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657603837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657663837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657723837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657783837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657843837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657903837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792657963837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658023837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658083837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658143837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658203837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658263837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658323837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658383837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658443837, "v": 124.5, "out": 780, "calls": 1}, {"t": 1792658503837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658563837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658623837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658683837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658743837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658803837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658863837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658923837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792658983837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659043837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659103837, "v": 108.9, "out": 1051, "calls": 1}, {"t": 1792659163837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659223837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659283837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659343837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659403837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659463837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659523837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659583837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659643837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659703837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659763837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659823837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659883837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792659943837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660003837, "v": 79.5, "out": 605, "calls": 1}, {"t": 1792660063837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660123837, "v": 125.1, "out": 1097, "calls": 1}, {"t": 1792660183837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660243837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660303837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660363837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660423837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660483837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660543837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660603837, "v": 132.1, "out": 1283, "calls": 1}, {"t": 1792660663837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660723837, "v": 0.0, "out": 0, "calls": 0}, {"t": 1792660783837, "v": 104.4, "out": 334, "calls": 1}], "models": [{"name": "DeepSeek-V4.1-Flash", "tokens": 35060346, "in": 34873999, "out": 186347, "calls": 200, "hit": 33473708, "miss": 1400291, "credit": 13.56, "share": 0.4806, "credit_share": 0.4968, "hit_rate": 0.9598, "speed": 111.8}, {"name": "Claude-4.5-Sonnet", "tokens": 25582977, "in": 25451971, "out": 131006, "calls": 144, "hit": 24414349, "miss": 1037622, "credit": 9.57, "share": 0.3507, "credit_share": 0.3506, "hit_rate": 0.9592, "speed": 113.4}, {"name": "Step-5-Preview", "tokens": 12301692, "in": 12245497, "out": 56195, "calls": 68, "hit": 11733950, "miss": 511547, "credit": 4.17, "share": 0.1686, "credit_share": 0.1528, "hit_rate": 0.9582, "speed": 102.1}], "sessions": [{"id": "demo-02", "title": "为 REST API 增加分页与限流", "cwd": "~/WorkBuddy/api-service", "model": "DeepSeek-V4.1-Flash", "tokens": 16266031, "in": 16181506, "out": 84525, "calls": 83, "hit_rate": 0.96014270859585, "credit": 6.07, "speed": 114.75596792127762, "last": 1792657226049, "used": 259780, "size": 1000000, "active": false}, {"id": "demo-03", "title": "排查 CI 构建超时", "cwd": "~/WorkBuddy/ci-tools", "model": "Claude-4.5-Sonnet", "tokens": 13652291, "in": 13583152, "out": 69139, "calls": 75, "hit_rate": 0.9619357127123366, "credit": 5.04, "speed": 113.61660660379374, "last": 1792657359694, "used": 362263, "size": 1000000, "active": false}, {"id": "demo-05", "title": "整理组件库文档", "cwd": "~/WorkBuddy/ui-kit", "model": "Step-5-Preview", "tokens": 12301692, "in": 12245497, "out": 56195, "calls": 68, "hit_rate": 0.9582257053347855, "credit": 4.17, "speed": 102.10441014012441, "last": 1792660791820, "used": 257843, "size": 1000000, "active": true}, {"id": "demo-04", "title": "补充缓存层单元测试", "cwd": "~/WorkBuddy/api-service", "model": "Claude-4.5-Sonnet", "tokens": 11930686, "in": 11868819, "out": 61867, "calls": 69, "hit_rate": 0.9561380959638865, "credit": 4.53, "speed": 113.1669251931632, "last": 1792660611313, "used": 63672, "size": 1000000, "active": true}, {"id": "demo-06", "title": "优化订单查询慢 SQL", "cwd": "~/WorkBuddy/order-center", "model": "DeepSeek-V4.1-Flash", "tokens": 10506164, "in": 10455354, "out": 50810, "calls": 63, "hit_rate": 0.9593813848866332, "credit": 3.78, "speed": 106.83145188589788, "last": 1792660178530, "used": 270013, "size": 1000000, "active": false}, {"id": "demo-01", "title": "重构日志采集模块", "cwd": "~/WorkBuddy/log-pipeline", "model": "DeepSeek-V4.1-Flash", "tokens": 8288151, "in": 8237139, "out": 51012, "calls": 54, "hit_rate": 0.9598576641719898, "credit": 3.7, "speed": 112.14829992393297, "last": 1792635111923, "used": 344364, "size": 1000000, "active": false}], "recent": [{"t": 1792660791820, "model": "Step-5-Preview", "in": 286850, "out": 334, "hit": 284455, "miss": 2395, "credit": 0.031, "dur": 3200, "speed": 104.4, "tool": "Grep", "title": "整理组件库文档"}, {"t": 1792660611313, "model": "Claude-4.5-Sonnet", "in": 309368, "out": 1283, "hit": 301782, "miss": 7586, "credit": 0.09, "dur": 9716, "speed": 132.1, "tool": "Bash", "title": "补充缓存层单元测试"}, {"t": 1792660178530, "model": "DeepSeek-V4.1-Flash", "in": 300697, "out": 1097, "hit": 288476, "miss": 12221, "credit": 0.078, "dur": 8768, "speed": 125.1, "tool": "Read", "title": "优化订单查询慢 SQL"}, {"t": 1792660058332, "model": "Claude-4.5-Sonnet", "in": 309770, "out": 605, "hit": 291085, "miss": 18685, "credit": 0.048, "dur": 7612, "speed": 79.5, "tool": "Write", "title": "补充缓存层单元测试"}, {"t": 1792659119865, "model": "Claude-4.5-Sonnet", "in": 229443, "out": 1051, "hit": 219361, "miss": 10082, "credit": 0.075, "dur": 9654, "speed": 108.9, "tool": "Glob", "title": "补充缓存层单元测试"}, {"t": 1792658463816, "model": "DeepSeek-V4.1-Flash", "in": 236650, "out": 780, "hit": 218663, "miss": 17987, "credit": 0.058, "dur": 6264, "speed": 124.5, "tool": "Grep", "title": "优化订单查询慢 SQL"}, {"t": 1792657396096, "model": "Step-5-Preview", "in": 245578, "out": 140, "hit": 233576, "miss": 12002, "credit": 0.019, "dur": 4078, "speed": 34.3, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792657359694, "model": "Claude-4.5-Sonnet", "in": 310925, "out": 251, "hit": 295920, "miss": 15005, "credit": 0.026, "dur": 3923, "speed": 64.0, "tool": "Grep", "title": "排查 CI 构建超时"}, {"t": 1792657226049, "model": "DeepSeek-V4.1-Flash", "in": 303606, "out": 1150, "hit": 301921, "miss": 1685, "credit": 0.081, "dur": 9168, "speed": 125.4, "tool": "Edit", "title": "为 REST API 增加分页与限流"}, {"t": 1792656676981, "model": "Step-5-Preview", "in": 287802, "out": 812, "hit": 285388, "miss": 2414, "credit": 0.06, "dur": 8121, "speed": 100.0, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792656134959, "model": "DeepSeek-V4.1-Flash", "in": 288527, "out": 1142, "hit": 278811, "miss": 9716, "credit": 0.081, "dur": 11280, "speed": 101.2, "tool": "Write", "title": "优化订单查询慢 SQL"}, {"t": 1792656030425, "model": "DeepSeek-V4.1-Flash", "in": 302477, "out": 852, "hit": 281554, "miss": 20923, "credit": 0.063, "dur": 6880, "speed": 123.8, "tool": "Glob", "title": "为 REST API 增加分页与限流"}, {"t": 1792655229155, "model": "DeepSeek-V4.1-Flash", "in": 291630, "out": 774, "hit": 287571, "miss": 4059, "credit": 0.058, "dur": 6118, "speed": 126.5, "tool": "Grep", "title": "优化订单查询慢 SQL"}, {"t": 1792655157528, "model": "Claude-4.5-Sonnet", "in": 268191, "out": 580, "hit": 258554, "miss": 9637, "credit": 0.046, "dur": 6577, "speed": 88.2, "tool": "TaskCreate", "title": "排查 CI 构建超时"}, {"t": 1792654166108, "model": "Claude-4.5-Sonnet", "in": 310150, "out": 852, "hit": 299715, "miss": 10435, "credit": 0.063, "dur": 6295, "speed": 135.3, "tool": "Edit", "title": "排查 CI 构建超时"}, {"t": 1792651957371, "model": "Claude-4.5-Sonnet", "in": 303453, "out": 449, "hit": 293256, "miss": 10197, "credit": 0.038, "dur": 5791, "speed": 77.5, "tool": "Grep", "title": "补充缓存层单元测试"}, {"t": 1792651886195, "model": "DeepSeek-V4.1-Flash", "in": 244084, "out": 1123, "hit": 234140, "miss": 9944, "credit": 0.08, "dur": 6819, "speed": 164.7, "tool": "Edit", "title": "优化订单查询慢 SQL"}, {"t": 1792651579326, "model": "Claude-4.5-Sonnet", "in": 239764, "out": 1479, "hit": 235626, "miss": 4138, "credit": 0.102, "dur": 12062, "speed": 122.6, "tool": "TaskCreate", "title": "补充缓存层单元测试"}, {"t": 1792651433913, "model": "Claude-4.5-Sonnet", "in": 255193, "out": 392, "hit": 238832, "miss": 16361, "credit": 0.034, "dur": 4840, "speed": 81.0, "tool": "Read", "title": "补充缓存层单元测试"}, {"t": 1792651410476, "model": "Claude-4.5-Sonnet", "in": 249217, "out": 1369, "hit": 237653, "miss": 11564, "credit": 0.095, "dur": 9703, "speed": 141.1, "tool": "Bash", "title": "排查 CI 构建超时"}, {"t": 1792651203233, "model": "Step-5-Preview", "in": 292469, "out": 1041, "hit": 272172, "miss": 20297, "credit": 0.075, "dur": 13998, "speed": 74.4, "tool": "Glob", "title": "整理组件库文档"}, {"t": 1792650610349, "model": "Claude-4.5-Sonnet", "in": 281285, "out": 476, "hit": 275469, "miss": 5816, "credit": 0.04, "dur": 5981, "speed": 79.6, "tool": "TaskCreate", "title": "补充缓存层单元测试"}, {"t": 1792648907139, "model": "DeepSeek-V4.1-Flash", "in": 221462, "out": 1039, "hit": 213146, "miss": 8316, "credit": 0.074, "dur": 10734, "speed": 96.8, "tool": "Write", "title": "优化订单查询慢 SQL"}, {"t": 1792648410061, "model": "Claude-4.5-Sonnet", "in": 283699, "out": 1301, "hit": 282063, "miss": 1636, "credit": 0.091, "dur": 9505, "speed": 136.9, "tool": "Edit", "title": "排查 CI 构建超时"}], "status": {"files": 6, "records": 412, "last_scan": 1792660843820, "sessions": 6, "source": "~/.workbuddy/projects（演示数据）"}};</script>
 <script>
 /* WorkBuddy Token Monitor — 前端面板 */
 (function () {
@@ -820,6 +1178,11 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
 
   const state = {
     range: "today",
+    customStart: "",
+    customEnd: "",
+    model: "",
+    modelMetric: "tokens", // "tokens" | "credit"
+    activeTab: "sessions", // "sessions" | "models"
     paused: false,
     data: null,
     lastUpdate: 0,
@@ -1251,7 +1614,8 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
     const cx = W / 2, cy = H / 2;
     const R = Math.min(W, H) / 2 - 6;
     const r = R * 0.66;
-    const total = models.reduce((s, m) => s + m.tokens, 0);
+    const isCredit = state.modelMetric === "credit";
+    const total = models.reduce((s, m) => s + (isCredit ? m.credit : m.tokens), 0);
 
     if (!total) {
       ctx.strokeStyle = "#eef2f7";
@@ -1265,7 +1629,8 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
     const prog = animate ? state._p || 0 : 1;
     let a0 = -Math.PI / 2;
     models.forEach((m, i) => {
-      const frac = m.tokens / total;
+      const val = isCredit ? m.credit : m.tokens;
+      const frac = val / total;
       const a1 = a0 + frac * Math.PI * 2 * prog;
       ctx.beginPath();
       ctx.arc(cx, cy, R, a0, a1);
@@ -1282,7 +1647,7 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
     ctx.fillStyle = "#fff";
     ctx.fill();
 
-    canvas._hit = { donut: true, cx: cx, cy: cy, R: R, r: r, models: models, total: total };
+    canvas._hit = { donut: true, cx: cx, cy: cy, R: R, r: r, models: models, total: total, isCredit: isCredit };
   }
 
   /* ------------------------------------------------ hover */
@@ -1359,10 +1724,15 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
           let acc = 0;
           for (let i = 0; i < hit.donut.models.length; i++) {
             const m = hit.donut.models[i];
-            const f = m.tokens / hit.donut.total;
+            const val = hit.donut.isCredit ? m.credit : m.tokens;
+            const f = val / (hit.donut.total || 1);
             if (ang >= acc && ang < acc + f) {
+              const cShare = (m.credit_share !== undefined ? m.credit_share * 100 : ((m.credit / (hit.donut.total || 1)) * 100)).toFixed(1);
+              const tShare = (m.share !== undefined ? m.share * 100 : ((m.tokens / (hit.donut.total || 1)) * 100)).toFixed(1);
               showTip(
-                '<b>' + m.name + '</b><br>' + compact(m.tokens) + ' tokens · ' + (f * 100).toFixed(1) + '%<br>' +
+                '<b>' + esc(m.name) + '</b><br>' +
+                '<span class="k">Token 用量</span> ' + compact(m.tokens) + ' (' + tShare + '%)<br>' +
+                '<span class="k">积分消耗</span> ' + m.credit.toFixed(2) + ' 分 (' + cShare + '%)<br>' +
                 '<span class="k">' + m.calls + ' 次调用 · 命中率 ' + pct(m.hit / (m.in || 1)) + '</span>',
                 px, py
               );
@@ -1423,13 +1793,33 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
 
   function renderModels(models) {
     const box = $("#model-legend");
-    const total = models.reduce((s, m) => s + m.tokens, 0);
-    $("#model-total").textContent = compact(total);
-    box.innerHTML = models.slice(0, 6).map((m, i) =>
-      '<li><i style="background:' + MODEL_COLORS[i % MODEL_COLORS.length] + '"></i>' +
-      '<span class="lname" title="' + esc(m.name) + '">' + esc(m.name) + "</span>" +
-      '<span class="lval">' + (total ? ((m.tokens / total) * 100).toFixed(1) : "0") + "%</span></li>"
-    ).join("");
+    const isCredit = state.modelMetric === "credit";
+    const totalTokens = models.reduce((s, m) => s + m.tokens, 0);
+    const totalCredit = models.reduce((s, m) => s + m.credit, 0);
+
+    const totalEl = $("#model-total");
+    const labelEl = $("#model-total-label");
+    if (isCredit) {
+      totalEl.textContent = totalCredit.toFixed(2);
+      if (labelEl) labelEl.textContent = "总积分(分)";
+    } else {
+      totalEl.textContent = compact(totalTokens);
+      if (labelEl) labelEl.textContent = "总 Token";
+    }
+
+    const items = isCredit
+      ? [].concat(models).sort((a, b) => b.credit - a.credit)
+      : [].concat(models).sort((a, b) => b.tokens - a.tokens);
+
+    box.innerHTML = items.slice(0, 6).map((m, i) => {
+      const color = MODEL_COLORS[i % MODEL_COLORS.length];
+      const valTxt = isCredit
+        ? m.credit.toFixed(2) + " 分 (" + (totalCredit ? ((m.credit / totalCredit) * 100).toFixed(1) : "0") + "%)"
+        : compact(m.tokens) + " (" + (totalTokens ? ((m.tokens / totalTokens) * 100).toFixed(1) : "0") + "%)";
+      return '<li><i style="background:' + color + '"></i>' +
+        '<span class="lname" title="' + esc(m.name) + '">' + esc(m.name) + "</span>" +
+        '<span class="lval">' + valTxt + "</span></li>";
+    }).join("");
   }
 
   function esc(s) {
@@ -1518,6 +1908,63 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
       "命中 " + compact(saved) + " tokens，约等于减少 " + (factor ? factor.toFixed(1) + "×" : "大量") + " 的重复计算";
   }
 
+  function renderModelTable(models) {
+    const tb = $("#tbl-models tbody");
+    if (!tb) return;
+    if (!models || !models.length) {
+      tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:26px 0">当前选定时间段内没有模型调用记录</td></tr>';
+      return;
+    }
+    const maxCredit = Math.max.apply(null, models.map((m) => m.credit).concat([0.01]));
+    const totalCredit = models.reduce((s, m) => s + m.credit, 0);
+
+    tb.innerHTML = models.map((m, i) => {
+      const hr = m.hit_rate !== undefined ? m.hit_rate : (m.hit / (m.in || 1));
+      const cls = hr >= 0.9 ? "good" : hr >= 0.6 ? "mid" : "bad";
+      const cRatio = maxCredit > 0 ? Math.min(100, Math.max(0, (m.credit / maxCredit) * 100)) : 0;
+      const cShare = m.credit_share !== undefined
+        ? (m.credit_share * 100).toFixed(1) + "%"
+        : (totalCredit ? ((m.credit / totalCredit) * 100).toFixed(1) + "%" : "0.0%");
+      const isSelected = state.model && state.model.toLowerCase() === m.name.toLowerCase();
+
+      return '<tr' + (isSelected ? ' style="background:#f8faff"' : '') + '>' +
+        '<td class="col-title">' +
+        '<div class="title-cell"><span class="rank">' + (i + 1) + '</span>' +
+        '<span class="model-chip" title="' + esc(m.name) + '">' + esc(m.name) + '</span>' +
+        (isSelected ? ' <span class="pill good" style="font-size:10px;padding:2px 6px">已筛选</span>' : '') +
+        '</div></td>' +
+        '<td class="num"><b>' + compact(m.tokens) + '</b></td>' +
+        '<td class="num">' + compact(m.in) + ' / ' + compact(m.out) + '</td>' +
+        '<td class="num"><span class="pill ' + cls + '">' + (hr * 100).toFixed(1) + '%</span></td>' +
+        '<td class="num">' + intFmt(m.calls) + '</td>' +
+        '<td class="num">' + (m.speed ? m.speed.toFixed(0) : '—') + '</td>' +
+        '<td class="num"><div class="credit-bar-cell"><b>' + m.credit.toFixed(2) + ' 分</b>' +
+        '<span class="credit-mini-bar"><i style="width:' + cRatio.toFixed(1) + '%"></i></span></div></td>' +
+        '<td class="num">' + cShare + '</td>' +
+        '<td style="text-align:center">' +
+        (isSelected
+          ? '<button class="btn-filter-this" data-clear="1" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">清除</button>'
+          : '<button class="btn-filter-this" data-model="' + esc(m.name) + '">筛选</button>') +
+        '</td>' +
+        '</tr>';
+    }).join("");
+  }
+
+  function syncModelFilterSelect(models) {
+    const sel = $("#model-filter");
+    if (!sel) return;
+    const current = (state.model || "").toLowerCase();
+    const opts = ['<option value="">全部模型 (' + models.length + ' 种)</option>'];
+    models.forEach((m) => {
+      const isSel = m.name.toLowerCase() === current ? ' selected' : '';
+      opts.push('<option value="' + esc(m.name) + '"' + isSel + '>' + esc(m.name) + ' (' + compact(m.tokens) + ' tok · ' + m.credit.toFixed(1) + '分)</option>');
+    });
+    sel.innerHTML = opts.join("");
+    sel.classList.toggle("active", !!state.model);
+    const clr = $("#model-filter-clear");
+    if (clr) clr.style.display = state.model ? "block" : "none";
+  }
+
   function render() {
     const data = state.data;
     if (!data) return;
@@ -1526,8 +1973,10 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
     renderNowSpeed(data);
     renderModels(data.models);
     renderSessions(data.sessions);
+    renderModelTable(data.models);
     renderStream(data.recent);
     renderCacheNote(data.kpi);
+    syncModelFilterSelect(data.models);
 
     $("#usage-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
     $("#cache-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
@@ -1569,7 +2018,15 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
   async function load() {
     if (state.paused) return;
     try {
-      const res = await fetch("/api/snapshot?range=" + encodeURIComponent(state.range), { cache: "no-store" });
+      let url = "/api/snapshot?range=" + encodeURIComponent(state.range);
+      if (state.range === "custom") {
+        if (state.customStart) url += "&start=" + encodeURIComponent(state.customStart);
+        if (state.customEnd) url += "&end=" + encodeURIComponent(state.customEnd);
+      }
+      if (state.model) {
+        url += "&model=" + encodeURIComponent(state.model);
+      }
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       state.data = data;
@@ -1584,14 +2041,155 @@ tr:nth-child(3) .rank { background: #ede9fe; color: #7c3aed; }
 
   /* ------------------------------------------------ 事件 */
 
+  const popover = $("#custom-date-popover");
   $("#range").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-range]");
     if (!b) return;
+    const r = b.dataset.range;
+    if (r === "custom") {
+      if (popover) {
+        popover.style.display = popover.style.display === "none" ? "block" : "none";
+      }
+      return;
+    }
+    if (popover) popover.style.display = "none";
+    const custBtn = $("#btn-custom-range");
+    if (custBtn) custBtn.textContent = "自定义 ▾";
     $$("#range button").forEach((x) => x.classList.toggle("on", x === b));
-    state.range = b.dataset.range;
+    state.range = r;
+    state.customStart = "";
+    state.customEnd = "";
     state.animate = true;
     load();
   });
+
+  function fmtDateInput(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  $$(".preset-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const p = btn.dataset.preset;
+      const now = new Date();
+      let s = new Date(now), e = new Date(now);
+      if (p === "today") {
+        // today
+      } else if (p === "yesterday") {
+        s.setDate(s.getDate() - 1);
+        e.setDate(e.getDate() - 1);
+      } else if (p === "7d") {
+        s.setDate(s.getDate() - 6);
+      } else if (p === "30d") {
+        s.setDate(s.getDate() - 29);
+      } else if (p === "thismonth") {
+        s.setDate(1);
+      }
+      $("#inp-start-date").value = fmtDateInput(s);
+      $("#inp-end-date").value = fmtDateInput(e);
+    });
+  });
+
+  const btnApply = $("#btn-custom-apply");
+  if (btnApply) {
+    btnApply.addEventListener("click", () => {
+      const sVal = $("#inp-start-date").value;
+      const eVal = $("#inp-end-date").value;
+      if (!sVal && !eVal) {
+        if (popover) popover.style.display = "none";
+        return;
+      }
+      state.range = "custom";
+      state.customStart = sVal ? sVal + " 00:00:00" : "";
+      state.customEnd = eVal ? eVal + " 23:59:59" : "";
+      $$("#range button").forEach((x) => x.classList.toggle("on", x.dataset.range === "custom"));
+      const sShort = sVal ? sVal.slice(5) : "";
+      const eShort = eVal ? eVal.slice(5) : "";
+      const custBtn = $("#btn-custom-range");
+      if (custBtn) custBtn.textContent = (sShort && eShort ? sShort + "~" + eShort : "已选时间") + " ▾";
+      if (popover) popover.style.display = "none";
+      state.animate = true;
+      load();
+    });
+  }
+
+  const btnCancel = $("#btn-custom-cancel");
+  if (btnCancel) {
+    btnCancel.addEventListener("click", () => {
+      if (popover) popover.style.display = "none";
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (popover && popover.style.display !== "none") {
+      if (!e.target.closest(".range-box")) {
+        popover.style.display = "none";
+      }
+    }
+  });
+
+  const selModel = $("#model-filter");
+  if (selModel) {
+    selModel.addEventListener("change", (e) => {
+      state.model = e.target.value;
+      state.animate = true;
+      load();
+    });
+  }
+  const clrModel = $("#model-filter-clear");
+  if (clrModel) {
+    clrModel.addEventListener("click", () => {
+      state.model = "";
+      if (selModel) selModel.value = "";
+      state.animate = true;
+      load();
+    });
+  }
+
+  const metricToggle = $("#model-metric-toggle");
+  if (metricToggle) {
+    metricToggle.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-metric]");
+      if (!b) return;
+      $$("#model-metric-toggle button").forEach((x) => x.classList.toggle("on", x === b));
+      state.modelMetric = b.dataset.metric;
+      if (state.data) {
+        renderModels(state.data.models);
+        drawDonut($("#chart-models"), state.data.models, false);
+      }
+    });
+  }
+
+  const tabHeader = $("#table-tabs");
+  if (tabHeader) {
+    tabHeader.addEventListener("click", (e) => {
+      const b = e.target.closest("button.tbl-tab");
+      if (!b) return;
+      $$("#table-tabs button").forEach((x) => x.classList.toggle("on", x === b));
+      state.activeTab = b.dataset.tab;
+      const isSess = state.activeTab === "sessions";
+      $("#wrap-sessions").style.display = isSess ? "" : "none";
+      $("#wrap-models").style.display = isSess ? "none" : "";
+      $("#table-tag").textContent = isSess ? "上下文占用为当前窗口" : "按模型查看累计消耗与积分";
+    });
+  }
+
+  const tblModels = $("#tbl-models");
+  if (tblModels) {
+    tblModels.addEventListener("click", (e) => {
+      const b = e.target.closest(".btn-filter-this");
+      if (!b) return;
+      if (b.dataset.clear) {
+        state.model = "";
+      } else if (b.dataset.model) {
+        state.model = b.dataset.model;
+      }
+      state.animate = true;
+      load();
+    });
+  }
 
   $("#pause").addEventListener("click", () => {
     state.paused = !state.paused;
