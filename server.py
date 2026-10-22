@@ -46,14 +46,35 @@ def ms_now():
     return int(time.time() * 1000)
 
 
+# 分桶时要对每条记录求当天/当小时零点，mktime 相对昂贵。
+# 同一天只算一次，按 (年, 年积日[, 小时]) 缓存。
+_DAY_CACHE = {}
+_HOUR_CACHE = {}
+_CACHE_LIMIT = 4096
+
+
 def day_start_ms(ts_ms):
     lt = time.localtime(ts_ms / 1000.0)
-    return int(time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 0, 0, 0, 0, 0, -1)) * 1000)
+    key = (lt.tm_year, lt.tm_yday)
+    v = _DAY_CACHE.get(key)
+    if v is None:
+        v = int(time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 0, 0, 0, 0, 0, -1)) * 1000)
+        if len(_DAY_CACHE) > _CACHE_LIMIT:
+            _DAY_CACHE.clear()
+        _DAY_CACHE[key] = v
+    return v
 
 
 def hour_start_ms(ts_ms):
     lt = time.localtime(ts_ms / 1000.0)
-    return int(time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, 0, 0, 0, 0, -1)) * 1000)
+    key = (lt.tm_year, lt.tm_yday, lt.tm_hour)
+    v = _HOUR_CACHE.get(key)
+    if v is None:
+        v = int(time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, 0, 0, 0, 0, -1)) * 1000)
+        if len(_HOUR_CACHE) > _CACHE_LIMIT:
+            _HOUR_CACHE.clear()
+        _HOUR_CACHE[key] = v
+    return v
 
 
 def day_end_ms(ts_ms):
@@ -345,8 +366,13 @@ class Collector(object):
             actual_start = None
             actual_end = now
 
-        ck = (self.version, range_key, actual_start, actual_end,
-              model.lower() if model else None, speed_min)
+        # 缓存键：end 恒为 now，不能入键（否则每次都不命中）；
+        # 用当天零点保证跨天后失效，custom 才使用真实起止
+        model_key = model.lower() if model else None
+        if range_key == "custom":
+            ck = (self.version, range_key, actual_start, actual_end, model_key, speed_min)
+        else:
+            ck = (self.version, range_key, day_start_ms(now), model_key, speed_min)
 
         # 记录未变化时复用上次聚合结果，让高频轮询只付出扫描成本
         with self.lock:
@@ -385,7 +411,7 @@ class Collector(object):
         kpi["today_calls"] = tk["calls"]
 
         all_sel = recs if not model else [r for r in recs if (r["model"] or "").lower() == model.lower()]
-        ak = self._kpi(all_sel)
+        ak = kpi if all_sel is sel else self._kpi(all_sel)
         kpi["all_tokens"] = ak["tokens"]
         kpi["all_credit"] = ak["credit"]
 
@@ -513,8 +539,9 @@ class Collector(object):
         buckets = []
         span_ms = max(0, end - start)
 
-        # 判断是否按小时分桶：单日、昨日、今日，或跨度不超过 40 小时
-        if range_key in ("today", "yesterday") or (range_key == "custom" and span_ms <= 40 * 3600000):
+        # 分桶粒度只由实际跨度决定：≤40 小时按小时，否则按天。
+        # （早期按 range_key 判断，导致「全部」在只有当天数据时只剩一根柱子）
+        if span_ms <= 40 * 3600000:
             base = hour_start_ms(start)
             h_count = max(1, int((hour_start_ms(end) - base) / 3600000) + 1)
             h_count = min(h_count, 48)
