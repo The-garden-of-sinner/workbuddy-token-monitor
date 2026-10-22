@@ -373,6 +373,58 @@ body::before {
   flex: none;
 }
 
+.legend li.breakdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  padding: 3px 0;
+}
+.breakdown-item .item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+}
+.breakdown-item .item-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 16px;
+  font-size: 10px;
+  color: var(--ink3);
+}
+.price-chip {
+  background: #f1f5f9;
+  color: #334155;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 550;
+  font-size: 9.5px;
+  letter-spacing: .02em;
+}
+.comp-txt {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink3);
+}
+.breakdown-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  font-size: 10px;
+}
+.breakdown-foot .avg-price {
+  color: var(--brand);
+  font-weight: 600;
+}
+.breakdown-foot .foot-note {
+  color: var(--ink3);
+  font-size: 9px;
+}
+
 .legend-inline {
   display: flex;
   gap: 16px;

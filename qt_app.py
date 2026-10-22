@@ -732,12 +732,28 @@ class ModelCard(Card):
                 p.setBrush(QBrush(QColor(item["color"])))
                 p.drawPath(rr(QRectF(lx, ly + 4, 7, 7), 2))
                 name = item["name"]
-                txt(p, QRectF(lx + 13, ly, 75, 15), name, F(10), INK2)
+                txt(p, QRectF(lx + 13, ly, 75, 15), name, F(10, QFont.DemiBold), INK2)
                 val_str = ("%.2f分" % item["val"]) if is_credit else compact(item["val"])
                 pct = item["share"] * 100
-                txt(p, QRectF(lx + lw - 88, ly, 88, 15), "%s %.1f%%" % (val_str, pct), NUM(9), INK3,
+                txt(p, QRectF(lx + lw - 90, ly, 90, 15), "%s %.1f%%" % (val_str, pct), NUM(9), INK3,
                     Qt.AlignRight | Qt.AlignVCenter)
-                ly += 24
+
+                # 第二行：估算价格（积分/1M Token）及配套数据
+                price = item.get("price", 0.0)
+                price_str = ("%.2f分/M" % price) if price > 0 else "0分/M"
+                if is_credit:
+                    comp_str = "用量 %s" % compact(item.get("tok", 0))
+                else:
+                    comp_str = "消耗 %.2f分" % item.get("crd", 0.0)
+                txt(p, QRectF(lx + 13, ly + 15, lw - 13, 14),
+                    "估算 %s · %s" % (price_str, comp_str), F(9), INK3)
+                ly += 33
+
+            avg_p = self.breakdown.get("avg_price", 0.0)
+            txt(p, QRectF(lx + 13, ly + 4, lw - 13, 14),
+                "综合单价 ~%.2f 分/Mtok" % avg_p, F(9, QFont.DemiBold), QColor("#4f46e5"))
+            txt(p, QRectF(lx + 13, ly + 18, lw - 13, 13),
+                "* 估算价格 = 积分 / 1M Token", F(8), INK3)
         else:
             models_sorted = sorted(self.models, key=lambda x: -(x["credit"] if is_credit else x["tokens"]))
             for i, m in enumerate(models_sorted[:5]):

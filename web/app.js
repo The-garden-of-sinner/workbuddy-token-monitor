@@ -595,9 +595,15 @@
               const f = p.share * Math.PI * 2;
               if (ang >= acc && ang < acc + f) {
                 const valTxt = hit.donut.isCredit ? p.val.toFixed(2) + " 分" : compact(p.val);
+                const priceTxt = (p.price ? p.price.toFixed(2) : "0.00") + " 分/M";
+                const compTxt = hit.donut.isCredit
+                  ? '<span class="k">Token 用量</span> ' + compact(p.tok || 0)
+                  : '<span class="k">积分消耗</span> ' + (p.crd !== undefined ? p.crd.toFixed(2) : "0.00") + " 分";
                 showTip(
                   '<b>' + esc(p.name) + '</b><br>' +
-                  '<span class="k">' + (hit.donut.isCredit ? "积分消耗" : "Token 用量") + '</span> ' + valTxt + ' (' + (p.share * 100).toFixed(1) + '%)',
+                  '<span class="k">' + (hit.donut.isCredit ? "积分消耗" : "Token 用量") + '</span> ' + valTxt + ' (' + (p.share * 100).toFixed(1) + '%)<br>' +
+                  compTxt + '<br>' +
+                  '<span class="k">估算单价</span> <b>' + priceTxt + '</b>',
                   px, py
                 );
                 return;
@@ -689,6 +695,8 @@
     if (breakdown) {
       const parts = isCredit ? breakdown.credit_parts : breakdown.token_parts;
       const total = isCredit ? breakdown.credit : breakdown.tokens;
+      const avgPrice = breakdown.avg_price ? breakdown.avg_price.toFixed(2) : "0.00";
+
       if (isCredit) {
         totalEl.textContent = total.toFixed(2);
         if (labelEl) labelEl.textContent = "总积分(分)";
@@ -696,14 +704,29 @@
         totalEl.textContent = compact(total);
         if (labelEl) labelEl.textContent = "总 Token";
       }
-      box.innerHTML = parts.map((p) => {
+
+      const rows = parts.map((p) => {
         const valTxt = isCredit
           ? p.val.toFixed(2) + " 分 (" + (p.share * 100).toFixed(1) + "%)"
           : compact(p.val) + " (" + (p.share * 100).toFixed(1) + "%)";
-        return '<li><i style="background:' + p.color + '"></i>' +
+        const priceTxt = (p.price ? p.price.toFixed(2) : "0.00") + " 分/M";
+        const compTxt = isCredit
+          ? "用量 " + compact(p.tok || 0)
+          : "消耗 " + (p.crd !== undefined ? p.crd.toFixed(2) : "0.00") + " 分";
+        return '<li class="breakdown-item">' +
+          '<div class="item-head"><i style="background:' + p.color + '"></i>' +
           '<span class="lname">' + esc(p.name) + "</span>" +
-          '<span class="lval">' + valTxt + "</span></li>";
+          '<span class="lval">' + valTxt + "</span></div>" +
+          '<div class="item-sub"><span class="price-chip">估算 ' + priceTxt + "</span>" +
+          '<span class="comp-txt">' + compTxt + "</span></div>" +
+          "</li>";
       }).join("");
+
+      box.innerHTML = rows +
+        '<li class="breakdown-foot">' +
+        '<span class="avg-price">综合单价 ~' + avgPrice + ' 分/Mtok</span>' +
+        '<span class="foot-note">* 估算单价 = 积分 / 1M Token</span>' +
+        '</li>';
       return;
     }
 
