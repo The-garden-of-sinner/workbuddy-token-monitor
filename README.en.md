@@ -5,6 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20x86__64%20%2F%20ARM64-0f172a?logo=linux&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.8%2B-3776ab?logo=python&logoColor=white)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.14-41cd52)
+![Release](https://img.shields.io/github/v/release/The-garden-of-sinner/workbuddy-token-monitor?color=6366f1&label=release)
 ![License](https://img.shields.io/badge/License-MIT-0f172a)
 
 > **Platform**: Linux desktop (x86_64 / ARM64). Verified on Kylin, UOS and Zhaoxin-based machines.
@@ -21,7 +22,7 @@ and never leaves it.
 - **Linux native** — PyQt5 with hand-drawn QPainter charts, no browser engine involved
 - **No third-party dependencies** besides PyQt5 — collection and aggregation use only the standard library
 - **Two frontends** — a native window (default) and a web panel (`--web`), sharing one aggregation layer
-- **Incremental parsing** — reads only newly appended bytes every 1.2 s; tens of thousands of calls stay smooth
+- **Incremental parsing** — reads only newly appended bytes, at whatever pace the refresh interval sets; tens of thousands of calls stay smooth
 - **Four UI scale presets** — small / standard / large / extra large, DPI-aware and remembered
 - **Switchable throughput window** — 15 min / 1 h / 6 h / 24 h, with automatic bucket sizing
 - **Adjustable refresh interval** — 0.1 s (turbo) / 0.3 / 0.8 / 1.6 / 3 s; the fast presets go through a snapshot cache and still cost milliseconds
@@ -29,6 +30,21 @@ and never leaves it.
 - **Snapshot export** — one command produces a self-contained HTML file you can share
 
 ## Install
+
+### Option 1: .deb package (recommended)
+
+Grab the latest `workbuddy-token-monitor_<version>_all.deb` from
+[Releases](https://github.com/The-garden-of-sinner/workbuddy-token-monitor/releases):
+
+```bash
+sudo dpkg -i workbuddy-token-monitor_1.0.0_all.deb
+sudo apt -f install          # if dependencies are missing
+```
+
+Launch it from the application menu, or run `workbuddy-token-monitor` in a terminal.
+Uninstall with `sudo apt remove workbuddy-token-monitor`.
+
+### Option 2: run from source
 
 Requires Python 3.8+ and PyQt5:
 
@@ -65,7 +81,7 @@ If PyQt5 is missing, the launcher falls back to `--web` instead of failing.
 | Area | Description |
 | --- | --- |
 | Five KPI cards | Total tokens, cache hit rate, average generation speed, credits, call count |
-| Throughput | tokens/s curve over 15 min – 24 h (switchable top-right), with a large live reading for the last 5 minutes |
+| Throughput | tokens/s curve over 15 min – 24 h (switchable top-right), with a large 5-minute weighted average |
 | Model breakdown | Token share per model; spelling variants of the same model are merged |
 | Token volume | Hourly / daily stacked bars: cache hits, misses, output |
 | Cache hit rate | Per-bucket hit-rate line with an 80% reference |
@@ -139,6 +155,8 @@ workbuddy-token-monitor/
 ├── export_preview.py   Exports a single-file snapshot
 ├── preview.html        Demo snapshot (open directly in a browser)
 ├── make_icon.py        Regenerates the icon
+├── build_deb.sh        Builds the .deb package
+├── CHANGELOG.md        Release notes
 ├── screenshot.png      Dashboard screenshot (demo data)
 ├── screenshot-mini.png Mini window screenshot
 ├── README.md           简体中文
@@ -185,6 +203,16 @@ python3 export_preview.py demo.html --demo    # single-file snapshot
 
 Demo data lives in `demo_data.py`: session names and numbers are entirely fictional and are used
 only for screenshots and documentation.
+
+## Versioning
+
+See [CHANGELOG.md](CHANGELOG.md) for the current version. Release flow:
+
+```bash
+./build_deb.sh 1.0.1        # build
+git tag v1.0.1 && git push origin v1.0.1
+# create a GitHub release and attach the .deb from dist/
+```
 
 ## License
 

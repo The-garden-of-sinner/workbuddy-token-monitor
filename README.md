@@ -5,6 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20x86__64%20%2F%20ARM64-0f172a?logo=linux&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.8%2B-3776ab?logo=python&logoColor=white)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.14-41cd52)
+![Release](https://img.shields.io/github/v/release/The-garden-of-sinner/workbuddy-token-monitor?color=6366f1&label=release)
 ![License](https://img.shields.io/badge/License-MIT-0f172a)
 
 > **适用平台**：Linux 桌面（x86_64 / ARM64）。已在银河麒麟、统信 UOS 等国产系统与兆芯平台上验证。
@@ -20,7 +21,7 @@
 - **Linux 原生**：PyQt5 + QPainter 手绘，不依赖浏览器内核，国产化环境可直接用
 - **零第三方依赖**（除 PyQt5）：采集与聚合只用 Python 标准库
 - **两种界面**：原生窗口（默认）与 Web 面板（`--web`），共用同一层聚合逻辑
-- **增量解析**：每 1.2 秒只读会话文件新增的字节，万级记录不卡
+- **增量解析**：只读会话文件新增的字节，扫描频率跟随刷新设置，万级记录不卡
 - **字号四档可调**：小 / 标准 / 大 / 特大，跟随系统 DPI 并记住选择
 - **吞吐时间窗可切换**：15 分钟 / 1 小时 / 6 小时 / 24 小时，自动切换分桶粒度
 - **刷新间隔可调**：0.1 秒（极速）/ 0.3 / 0.8 / 1.6 / 3 秒，高频档位走快照缓存，单次开销仍在毫秒级
@@ -28,6 +29,21 @@
 - **可导出快照**：一条命令生成单文件 HTML，发给别人不用装环境
 
 ## 安装
+
+### 方式一：deb 包（推荐）
+
+到 [Releases](https://github.com/The-garden-of-sinner/workbuddy-token-monitor/releases) 下载最新的
+`workbuddy-token-monitor_<版本>_all.deb`：
+
+```bash
+sudo dpkg -i workbuddy-token-monitor_1.0.0_all.deb
+sudo apt -f install          # 若提示缺少依赖
+```
+
+装好后从应用菜单打开「WorkBuddy 用量监视」，或终端执行 `workbuddy-token-monitor`。
+卸载：`sudo apt remove workbuddy-token-monitor`。
+
+### 方式二：源码运行
 
 依赖 Python 3.8+ 与 PyQt5：
 
@@ -64,7 +80,7 @@ cd workbuddy-token-monitor
 | 区域 | 说明 |
 | --- | --- |
 | 五张 KPI 卡 | 总 Token、缓存命中率、平均生成速度、积分消耗、调用次数 |
-| 生成吞吐 | 15 分钟 ~ 24 小时的 tokens/s 曲线（右上角切换），大字显示最近 5 分钟实时速度 |
+| 生成吞吐 | 15 分钟 ~ 24 小时的 tokens/s 曲线（右上角切换），大字为最近 5 分钟加权平均 |
 | 模型分布 | 按模型拆分 token 占比（大小写不同的同名模型自动合并） |
 | Token 用量 | 按小时 / 按天堆叠柱：缓存命中、未命中、输出 |
 | 缓存命中率 | 按时间桶的命中率折线，80% 参考线 |
@@ -133,6 +149,8 @@ workbuddy-token-monitor/
 ├── export_preview.py   导出单文件静态快照
 ├── preview.html        演示快照（可直接用浏览器打开）
 ├── make_icon.py        重新生成图标
+├── build_deb.sh        构建 .deb 安装包
+├── CHANGELOG.md        版本记录
 ├── screenshot.png      面板截图（演示数据）
 ├── screenshot-mini.png 悬浮窗截图
 ├── README.en.md        English README
@@ -147,6 +165,7 @@ WB_HOME=/path/to/.workbuddy ./run.sh           # 指向其他数据目录
 python3 qt_app.py --demo                       # 用演示数据打开
 python3 qt_app.py --shot out.png --range all   # 离屏渲染截图
 python3 qt_app.py --shot-mini mini.png         # 只渲染悬浮窗
+./build_deb.sh                                 # 打包到 dist/
 ```
 
 界面偏好写在 `.runtime/ui.json`（字号、刷新间隔），删掉即恢复默认。
@@ -176,6 +195,16 @@ python3 export_preview.py demo.html --demo    # 导出单文件快照
 ```
 
 演示数据在 `demo_data.py`，会话名与数值均为虚构，用于截图和文档，不接触真实数据。
+
+## 版本
+
+当前版本见 [CHANGELOG.md](CHANGELOG.md)。发版流程：
+
+```bash
+./build_deb.sh 1.0.1        # 打包
+git tag v1.0.1 && git push origin v1.0.1
+# 在 GitHub Releases 页创建 release，上传 dist/ 下的 deb
+```
 
 ## 许可证
 

@@ -25,10 +25,29 @@ from PyQt5.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QH
                              QLabel, QMainWindow, QMenu, QPushButton, QScrollArea,
                              QSizePolicy, QVBoxLayout, QWidget)
 
+__version__ = "1.0.0"
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-UI_CONF = os.path.join(BASE_DIR, ".runtime", "ui.json")
+
+def _state_dir():
+    """源码运行时写项目内 .runtime；装成系统包后写用户缓存目录。"""
+    if os.path.exists(os.path.join(BASE_DIR, "run.sh")):
+        d = os.path.join(BASE_DIR, ".runtime")
+    else:
+        base = os.environ.get("XDG_CACHE_HOME") or os.path.join(
+            os.path.expanduser("~"), ".cache")
+        d = os.path.join(base, "workbuddy-token-monitor")
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception:
+        pass
+    return d
+
+
+STATE_DIR = _state_dir()
+UI_CONF = os.path.join(STATE_DIR, "ui.json")
 
 
 def load_ui_conf():
@@ -1696,6 +1715,10 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    if "--version" in sys.argv or "-V" in sys.argv:
+        print("workbuddy-token-monitor %s" % __version__)
+        return
+
     shot = None
     if "--shot" in sys.argv:
         i = sys.argv.index("--shot")

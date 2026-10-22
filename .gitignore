@@ -1,3 +1,7 @@
+# 构建产物
+dist/
+.build/
+
 # 运行时产物
 .runtime/
 __pycache__/
