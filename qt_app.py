@@ -98,6 +98,23 @@ def NUM(px, weight=QFont.Normal):
     return f
 
 
+def ago_text(sec):
+    if sec < 60:
+        return "刚刚"
+    if sec < 3600:
+        return "%d 分钟" % (sec // 60)
+    if sec < 86400:
+        return "%d 小时" % (sec // 3600)
+    return "%d 天" % (sec // 86400)
+
+
+def fmt_sec(ms):
+    s = (ms or 0) / 1000.0
+    if abs(s - round(s)) < 0.05:
+        return "%d" % int(round(s))
+    return "%.1f" % s
+
+
 def compact(n):
     n = float(n or 0)
     if n >= 1e9:
@@ -1346,18 +1363,28 @@ class MiniWindow(QWidget):
         k = data.get("kpi") or {}
         gen = data.get("generated_at") or 0
 
-        recent = [x for x in (data.get("recent") or [])
-                  if x.get("dur") and x["dur"] > 200 and gen - x["t"] < 300000]
+        # 取最近一次调用，而不是窗口内的平均值——悬浮窗要的是「此刻」
+        rows = data.get("recent") or []
+        last = rows[0] if rows else None
         speed = 0.0
-        if recent:
-            dsum = sum(x["dur"] for x in recent)
-            osum = sum(x["out"] for x in recent)
-            speed = osum / (dsum / 1000.0) if dsum else 0.0
+        idle = False
+        if last is None:
+            sub = "等待调用"
+        else:
+            speed = last.get("speed") or 0.0
+            age = max(0.0, (gen - last["t"]) / 1000.0)
+            if age > 180:
+                idle = True
+                sub = "空闲 · %s前" % ago_text(age)
+            else:
+                sub = "tok/s · %s · 输出 %s" % (
+                    time.strftime("%H:%M:%S", time.localtime(last["t"] / 1000.0)),
+                    compact(last.get("out") or 0))
 
         p.setFont(NUM(30, QFont.DemiBold))
-        p.setPen(INK)
+        p.setPen(INK3 if idle else INK)
         p.drawText(QRectF(16, 30, 120, 34), int(Qt.AlignLeft | Qt.AlignVCenter), "%.0f" % speed)
-        txt(p, QRectF(17, 63, 140, 13), "tok/s · 近 5 分钟", F(9), INK3)
+        txt(p, QRectF(17, 63, 190, 13), sub, F(9), INK3)
 
         txt(p, QRectF(W - 168, 31, 152, 22), compact(k.get("tokens", 0)),
             NUM(17, QFont.DemiBold), INK, Qt.AlignRight | Qt.AlignVCenter)
@@ -1533,6 +1560,7 @@ class MainWindow(QMainWindow):
         save_ui_conf(refresh_ms=self.refresh_ms)
         if self.mini is not None:
             self.mini.set_refresh(self.refresh_ms)
+        self._last_version = -1
         self.refresh()
 
     # ---- 悬浮窗
@@ -1630,8 +1658,9 @@ class MainWindow(QMainWindow):
 
         t = time.localtime(data["generated_at"] / 1000.0)
         self.header.set_status(
-            "最近更新 %s · 每 1.6 秒自动刷新 · %d 条调用记录"
-            % (time.strftime("%H:%M:%S", t), data["status"]["records"]))
+            "最近更新 %s · 每 %s 秒自动刷新 · %d 条调用记录"
+            % (time.strftime("%H:%M:%S", t), fmt_sec(self.refresh_ms),
+               data["status"]["records"]))
         self.foot_label.setText(
             "数据源：%s　·　%d 个会话文件　·　%d 条调用记录"
             % (data["status"]["source"], data["status"]["files"], data["status"]["records"]))
