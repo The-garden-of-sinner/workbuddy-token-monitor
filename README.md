@@ -203,8 +203,11 @@ python3 export_preview.py demo.html --demo    # 导出单文件快照
 ```bash
 ./build_deb.sh 1.0.1        # 打包
 git tag v1.0.1 && git push origin v1.0.1
-# 在 GitHub Releases 页创建 release，上传 dist/ 下的 deb
+./release.sh 1.0.1          # 建 Release 并上传 deb
 ```
+
+`release.sh` 从 `~/.config/github/token` 读取 GitHub token（也可用 `GH_TOKEN` 环境变量），
+首次使用先跑一次 `./setup_token.sh` 交互录入，token 不会回显、也不会进 shell 历史。
 
 ## 许可证
 

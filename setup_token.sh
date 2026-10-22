@@ -3,7 +3,8 @@
 # token 不会回显，也不会进 shell history
 set -eu
 
-CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/workbuddy-token-monitor"
+# 通用路径，便于其他工作区的会话直接读取
+CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/github"
 CONF="$CONF_DIR/token"
 
 mkdir -p "$CONF_DIR"

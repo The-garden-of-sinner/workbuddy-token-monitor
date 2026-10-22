@@ -211,8 +211,12 @@ See [CHANGELOG.md](CHANGELOG.md) for the current version. Release flow:
 ```bash
 ./build_deb.sh 1.0.1        # build
 git tag v1.0.1 && git push origin v1.0.1
-# create a GitHub release and attach the .deb from dist/
+./release.sh 1.0.1          # create the release and upload the .deb
 ```
+
+`release.sh` reads the GitHub token from `~/.config/github/token` (or `GH_TOKEN`).
+Run `./setup_token.sh` once to store it interactively — the token is never echoed
+and never lands in your shell history.
 
 ## License
 

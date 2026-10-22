@@ -16,11 +16,14 @@ DEB="$DIR/dist/workbuddy-token-monitor_${VERSION}_all.deb"
 [ -f "$DEB" ] || { echo "找不到 $DEB，先运行 ./build_deb.sh $VERSION"; exit 1; }
 
 if [ -z "${GH_TOKEN:-}" ]; then
-  CONF="${XDG_CONFIG_HOME:-$HOME/.config}/workbuddy-token-monitor/token"
-  if [ -f "$CONF" ]; then
-    GH_TOKEN="$(cat "$CONF")"
-    export GH_TOKEN
-  fi
+  for CONF in "${XDG_CONFIG_HOME:-$HOME/.config}/github/token" \
+              "${XDG_CONFIG_HOME:-$HOME/.config}/workbuddy-token-monitor/token"; do
+    if [ -f "$CONF" ]; then
+      GH_TOKEN="$(cat "$CONF")"
+      export GH_TOKEN
+      break
+    fi
+  done
 fi
 [ -n "${GH_TOKEN:-}" ] || { echo "尚未配置 token，请先运行 ./setup_token.sh"; exit 1; }
 
