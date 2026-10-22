@@ -622,13 +622,17 @@ class ModelCard(Card):
     def __init__(self):
         super(ModelCard, self).__init__()
         self.models = []
+        self.breakdown = None
+        self.selected_model = None
         self.metric = "tokens"  # "tokens" | "credit"
         self.setMinimumHeight(250)
         self.setMinimumWidth(300)
         self.setCursor(Qt.PointingHandCursor)
 
-    def set_data(self, models):
+    def set_data(self, models, breakdown=None, selected_model=None):
         self.models = models
+        self.breakdown = breakdown
+        self.selected_model = selected_model
         self.update()
 
     def mousePressEvent(self, e):
@@ -643,7 +647,15 @@ class ModelCard(Card):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         W, H = self.width(), self.height()
-        txt(p, QRectF(18, 14, 160, 18), "模型分布", F(13, QFont.DemiBold), INK)
+
+        if self.breakdown and self.selected_model:
+            sm = self.selected_model
+            disp = sm[:12] + "…" if len(sm) > 13 else sm
+            card_title = "模型构成 · %s" % disp
+        else:
+            card_title = "模型分布"
+
+        txt(p, QRectF(18, 14, 220, 18), card_title, F(13, QFont.DemiBold), INK)
 
         is_credit = self.metric == "credit"
         tag_rect = QRectF(W - 120, 12, 102, 22)
@@ -654,10 +666,16 @@ class ModelCard(Card):
             F(10, QFont.DemiBold if is_credit else QFont.Normal),
             VIOLET if is_credit else INK2, Qt.AlignCenter)
 
-        total = sum((m["credit"] if is_credit else m["tokens"]) for m in self.models)
         d = min(H - 60, W * 0.46, 168)
         cx, cy = 18 + d / 2, 46 + (H - 60) / 2
         R, r = d / 2, d / 2 * 0.66
+
+        if self.breakdown:
+            parts = self.breakdown["credit_parts"] if is_credit else self.breakdown["token_parts"]
+            total = self.breakdown["credit"] if is_credit else self.breakdown["tokens"]
+        else:
+            parts = None
+            total = sum((m["credit"] if is_credit else m["tokens"]) for m in self.models)
 
         if not total:
             p.setPen(QPen(LINE2, 12))
@@ -668,19 +686,33 @@ class ModelCard(Card):
             return
 
         a0 = 90 * 16
-        for i, m in enumerate(self.models):
-            val = m["credit"] if is_credit else m["tokens"]
-            frac = val / float(total) if total else 0
-            span = -frac * 360 * 16
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(MODEL_COLORS[i % len(MODEL_COLORS)]))
-            path = QPainterPath()
-            path.arcMoveTo(QRectF(cx - R, cy - R, R * 2, R * 2), a0 / 16.0)
-            path.arcTo(QRectF(cx - R, cy - R, R * 2, R * 2), a0 / 16.0, span / 16.0)
-            path.arcTo(QRectF(cx - r, cy - r, r * 2, r * 2), (a0 + span) / 16.0, -span / 16.0)
-            path.closeSubpath()
-            p.drawPath(path)
-            a0 += span
+        if self.breakdown and parts:
+            for item in parts:
+                frac = item["share"]
+                span = -frac * 360 * 16
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(QColor(item["color"])))
+                path = QPainterPath()
+                path.arcMoveTo(QRectF(cx - R, cy - R, R * 2, R * 2), a0 / 16.0)
+                path.arcTo(QRectF(cx - R, cy - R, R * 2, R * 2), a0 / 16.0, span / 16.0)
+                path.arcTo(QRectF(cx - r, cy - r, r * 2, r * 2), (a0 + span) / 16.0, -span / 16.0)
+                path.closeSubpath()
+                p.drawPath(path)
+                a0 += span
+        else:
+            for i, m in enumerate(self.models):
+                val = m["credit"] if is_credit else m["tokens"]
+                frac = val / float(total) if total else 0
+                span = -frac * 360 * 16
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(MODEL_COLORS[i % len(MODEL_COLORS)]))
+                path = QPainterPath()
+                path.arcMoveTo(QRectF(cx - R, cy - R, R * 2, R * 2), a0 / 16.0)
+                path.arcTo(QRectF(cx - R, cy - R, R * 2, R * 2), a0 / 16.0, span / 16.0)
+                path.arcTo(QRectF(cx - r, cy - r, r * 2, r * 2), (a0 + span) / 16.0, -span / 16.0)
+                path.closeSubpath()
+                p.drawPath(path)
+                a0 += span
 
         # 中心
         center_txt = ("%.2f分" % total) if is_credit else compact(total)
@@ -694,24 +726,37 @@ class ModelCard(Card):
         lx = cx + R + 22
         lw = W - lx - 16
         ly = 52
-        models_sorted = sorted(self.models, key=lambda x: -(x["credit"] if is_credit else x["tokens"]))
-        for i, m in enumerate(models_sorted[:5]):
-            val = m["credit"] if is_credit else m["tokens"]
-            pct = val / float(total) * 100 if total else 0
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(MODEL_COLORS[i % len(MODEL_COLORS)]))
-            p.drawPath(rr(QRectF(lx, ly + 4, 7, 7), 2))
-            name = m["name"]
-            f = F(10)
-            fm = QFontMetrics(f)
-            avail = lw - 76
-            while fm.width(name) > avail and len(name) > 4:
-                name = name[:-2]
-            txt(p, QRectF(lx + 13, ly, avail, 15), name, f, INK2)
-            val_str = ("%.1f分" % m["credit"]) if is_credit else compact(m["tokens"])
-            txt(p, QRectF(lx + lw - 72, ly, 72, 15), "%s %.1f%%" % (val_str, pct), NUM(9), INK3,
-                Qt.AlignRight | Qt.AlignVCenter)
-            ly += 21
+        if self.breakdown and parts:
+            for item in parts:
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(QColor(item["color"])))
+                p.drawPath(rr(QRectF(lx, ly + 4, 7, 7), 2))
+                name = item["name"]
+                txt(p, QRectF(lx + 13, ly, 75, 15), name, F(10), INK2)
+                val_str = ("%.2f分" % item["val"]) if is_credit else compact(item["val"])
+                pct = item["share"] * 100
+                txt(p, QRectF(lx + lw - 88, ly, 88, 15), "%s %.1f%%" % (val_str, pct), NUM(9), INK3,
+                    Qt.AlignRight | Qt.AlignVCenter)
+                ly += 24
+        else:
+            models_sorted = sorted(self.models, key=lambda x: -(x["credit"] if is_credit else x["tokens"]))
+            for i, m in enumerate(models_sorted[:5]):
+                val = m["credit"] if is_credit else m["tokens"]
+                pct = val / float(total) * 100 if total else 0
+                p.setPen(Qt.NoPen)
+                p.setBrush(QBrush(MODEL_COLORS[i % len(MODEL_COLORS)]))
+                p.drawPath(rr(QRectF(lx, ly + 4, 7, 7), 2))
+                name = m["name"]
+                f = F(10)
+                fm = QFontMetrics(f)
+                avail = lw - 76
+                while fm.width(name) > avail and len(name) > 4:
+                    name = name[:-2]
+                txt(p, QRectF(lx + 13, ly, avail, 15), name, f, INK2)
+                val_str = ("%.1f分" % m["credit"]) if is_credit else compact(m["tokens"])
+                txt(p, QRectF(lx + lw - 72, ly, 72, 15), "%s %.1f%%" % (val_str, pct), NUM(9), INK3,
+                    Qt.AlignRight | Qt.AlignVCenter)
+                ly += 21
         p.end()
 
 
@@ -2035,12 +2080,12 @@ class MainWindow(QMainWindow):
             if k["gen_seconds"] >= 120 else "生成耗时 %.0f 秒" % k["gen_seconds"])
 
         self.speed_chart.set_data(data["speeds"], self._live_speed(data), self._live_sub(data))
-        self.model_card.set_data(data["models"])
+        self.model_card.set_data(data["models"], data.get("breakdown"), self.model_filter)
         self.usage_chart.set_data(data["series"])
         self.cache_chart.set_data(data["series"], k["hit_rate"])
-        self.session_table.set_data(data["sessions"], data.get("models"))
+        self.session_table.set_data(data["sessions"], data.get("all_models") or data.get("models"))
         self.stream_card.set_data(data["recent"])
-        self.header.update_models_menu(data.get("models", []), self.model_filter)
+        self.header.update_models_menu(data.get("all_models") or data.get("models", []), self.model_filter)
 
         t = time.localtime(data["generated_at"] / 1000.0)
         filter_hint = " · 筛选模型: %s" % self.model_filter if self.model_filter else ""

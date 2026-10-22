@@ -450,14 +450,21 @@
 
   /* ------------------------------------------------ 环形图 */
 
-  function drawDonut(canvas, models, animate) {
+  function drawDonut(canvas, models, animate, breakdown) {
     const d = fit(canvas);
     const ctx = d.ctx, W = d.w, H = d.h;
     const cx = W / 2, cy = H / 2;
     const R = Math.min(W, H) / 2 - 6;
     const r = R * 0.66;
     const isCredit = state.modelMetric === "credit";
-    const total = models.reduce((s, m) => s + (isCredit ? m.credit : m.tokens), 0);
+
+    let parts = null, total = 0;
+    if (breakdown) {
+      parts = isCredit ? breakdown.credit_parts : breakdown.token_parts;
+      total = isCredit ? breakdown.credit : breakdown.tokens;
+    } else {
+      total = models.reduce((s, m) => s + (isCredit ? m.credit : m.tokens), 0);
+    }
 
     if (!total) {
       ctx.strokeStyle = "#eef2f7";
@@ -470,18 +477,33 @@
 
     const prog = animate ? state._p || 0 : 1;
     let a0 = -Math.PI / 2;
-    models.forEach((m, i) => {
-      const val = isCredit ? m.credit : m.tokens;
-      const frac = val / total;
-      const a1 = a0 + frac * Math.PI * 2 * prog;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, a0, a1);
-      ctx.arc(cx, cy, r, a1, a0, true);
-      ctx.closePath();
-      ctx.fillStyle = MODEL_COLORS[i % MODEL_COLORS.length];
-      ctx.fill();
-      a0 = a1;
-    });
+
+    if (breakdown && parts) {
+      parts.forEach((p) => {
+        const frac = p.share;
+        const a1 = a0 + frac * Math.PI * 2 * prog;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, a0, a1);
+        ctx.arc(cx, cy, r, a1, a0, true);
+        ctx.closePath();
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        a0 = a1;
+      });
+    } else {
+      models.forEach((m, i) => {
+        const val = isCredit ? m.credit : m.tokens;
+        const frac = val / total;
+        const a1 = a0 + frac * Math.PI * 2 * prog;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, a0, a1);
+        ctx.arc(cx, cy, r, a1, a0, true);
+        ctx.closePath();
+        ctx.fillStyle = MODEL_COLORS[i % MODEL_COLORS.length];
+        ctx.fill();
+        a0 = a1;
+      });
+    }
 
     // 内圈阴影
     ctx.beginPath();
@@ -489,7 +511,10 @@
     ctx.fillStyle = "#fff";
     ctx.fill();
 
-    canvas._hit = { donut: true, cx: cx, cy: cy, R: R, r: r, models: models, total: total, isCredit: isCredit };
+    canvas._hit = {
+      donut: true, cx: cx, cy: cy, R: R, r: r,
+      parts: parts, models: models, total: total, isCredit: isCredit
+    };
   }
 
   /* ------------------------------------------------ hover */
@@ -564,23 +589,40 @@
           let ang = Math.atan2(dy, dx) + Math.PI / 2;
           if (ang < 0) ang += Math.PI * 2;
           let acc = 0;
-          for (let i = 0; i < hit.donut.models.length; i++) {
-            const m = hit.donut.models[i];
-            const val = hit.donut.isCredit ? m.credit : m.tokens;
-            const f = val / (hit.donut.total || 1);
-            if (ang >= acc && ang < acc + f) {
-              const cShare = (m.credit_share !== undefined ? m.credit_share * 100 : ((m.credit / (hit.donut.total || 1)) * 100)).toFixed(1);
-              const tShare = (m.share !== undefined ? m.share * 100 : ((m.tokens / (hit.donut.total || 1)) * 100)).toFixed(1);
-              showTip(
-                '<b>' + esc(m.name) + '</b><br>' +
-                '<span class="k">Token 用量</span> ' + compact(m.tokens) + ' (' + tShare + '%)<br>' +
-                '<span class="k">积分消耗</span> ' + m.credit.toFixed(2) + ' 分 (' + cShare + '%)<br>' +
-                '<span class="k">' + m.calls + ' 次调用 · 命中率 ' + pct(m.hit / (m.in || 1)) + '</span>',
-                px, py
-              );
-              return;
+          if (hit.donut.parts) {
+            for (let i = 0; i < hit.donut.parts.length; i++) {
+              const p = hit.donut.parts[i];
+              const f = p.share * Math.PI * 2;
+              if (ang >= acc && ang < acc + f) {
+                const valTxt = hit.donut.isCredit ? p.val.toFixed(2) + " 分" : compact(p.val);
+                showTip(
+                  '<b>' + esc(p.name) + '</b><br>' +
+                  '<span class="k">' + (hit.donut.isCredit ? "积分消耗" : "Token 用量") + '</span> ' + valTxt + ' (' + (p.share * 100).toFixed(1) + '%)',
+                  px, py
+                );
+                return;
+              }
+              acc += f;
             }
-            acc += f;
+          } else {
+            for (let i = 0; i < hit.donut.models.length; i++) {
+              const m = hit.donut.models[i];
+              const val = hit.donut.isCredit ? m.credit : m.tokens;
+              const f = (val / (hit.donut.total || 1)) * Math.PI * 2;
+              if (ang >= acc && ang < acc + f) {
+                const cShare = (m.credit_share !== undefined ? m.credit_share * 100 : ((m.credit / (hit.donut.total || 1)) * 100)).toFixed(1);
+                const tShare = (m.share !== undefined ? m.share * 100 : ((m.tokens / (hit.donut.total || 1)) * 100)).toFixed(1);
+                showTip(
+                  '<b>' + esc(m.name) + '</b><br>' +
+                  '<span class="k">Token 用量</span> ' + compact(m.tokens) + ' (' + tShare + '%)<br>' +
+                  '<span class="k">积分消耗</span> ' + m.credit.toFixed(2) + ' 分 (' + cShare + '%)<br>' +
+                  '<span class="k">' + m.calls + ' 次调用 · 命中率 ' + pct(m.hit / (m.in || 1)) + '</span>',
+                  px, py
+                );
+                return;
+              }
+              acc += f;
+            }
           }
         }
       }
@@ -633,14 +675,41 @@
     $("#now-sub").textContent = sub;
   }
 
-  function renderModels(models) {
+  function renderModels(models, breakdown) {
     const box = $("#model-legend");
     const isCredit = state.modelMetric === "credit";
-    const totalTokens = models.reduce((s, m) => s + m.tokens, 0);
-    const totalCredit = models.reduce((s, m) => s + m.credit, 0);
+    const titleEl = $("#model-card-title");
+    if (titleEl) {
+      titleEl.textContent = breakdown && state.model ? ("模型构成 · " + shortModel(state.model)) : "模型分布";
+    }
 
     const totalEl = $("#model-total");
     const labelEl = $("#model-total-label");
+
+    if (breakdown) {
+      const parts = isCredit ? breakdown.credit_parts : breakdown.token_parts;
+      const total = isCredit ? breakdown.credit : breakdown.tokens;
+      if (isCredit) {
+        totalEl.textContent = total.toFixed(2);
+        if (labelEl) labelEl.textContent = "总积分(分)";
+      } else {
+        totalEl.textContent = compact(total);
+        if (labelEl) labelEl.textContent = "总 Token";
+      }
+      box.innerHTML = parts.map((p) => {
+        const valTxt = isCredit
+          ? p.val.toFixed(2) + " 分 (" + (p.share * 100).toFixed(1) + "%)"
+          : compact(p.val) + " (" + (p.share * 100).toFixed(1) + "%)";
+        return '<li><i style="background:' + p.color + '"></i>' +
+          '<span class="lname">' + esc(p.name) + "</span>" +
+          '<span class="lval">' + valTxt + "</span></li>";
+      }).join("");
+      return;
+    }
+
+    const totalTokens = models.reduce((s, m) => s + m.tokens, 0);
+    const totalCredit = models.reduce((s, m) => s + m.credit, 0);
+
     if (isCredit) {
       totalEl.textContent = totalCredit.toFixed(2);
       if (labelEl) labelEl.textContent = "总积分(分)";
@@ -813,12 +882,12 @@
 
     renderKpi(data.kpi);
     renderNowSpeed(data);
-    renderModels(data.models);
+    renderModels(data.models, data.breakdown);
     renderSessions(data.sessions);
-    renderModelTable(data.models);
+    renderModelTable(data.all_models || data.models);
     renderStream(data.recent);
     renderCacheNote(data.kpi);
-    syncModelFilterSelect(data.models);
+    syncModelFilterSelect(data.all_models || data.models);
 
     $("#usage-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
     $("#cache-tag").textContent = data.series.granularity === "hour" ? "按小时" : "按天";
@@ -852,7 +921,7 @@
     drawSpeed($("#chart-speed"), data.speeds, state._p !== undefined && state._p < 1);
     drawUsage($("#chart-usage"), data.series.buckets, state._p !== undefined && state._p < 1);
     drawCache($("#chart-cache"), data.series.buckets, state._p !== undefined && state._p < 1);
-    drawDonut($("#chart-models"), data.models, state._p !== undefined && state._p < 1);
+    drawDonut($("#chart-models"), data.models, state._p !== undefined && state._p < 1, data.breakdown);
   }
 
   /* ------------------------------------------------ 数据 */
@@ -998,8 +1067,8 @@
       $$("#model-metric-toggle button").forEach((x) => x.classList.toggle("on", x === b));
       state.modelMetric = b.dataset.metric;
       if (state.data) {
-        renderModels(state.data.models);
-        drawDonut($("#chart-models"), state.data.models, false);
+        renderModels(state.data.models, state.data.breakdown);
+        drawDonut($("#chart-models"), state.data.models, false, state.data.breakdown);
       }
     });
   }

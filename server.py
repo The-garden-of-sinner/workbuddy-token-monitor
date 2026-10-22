@@ -350,8 +350,10 @@ class Collector(object):
         # 若指定了具体模型，则其余视图按该模型过滤
         if model:
             sel = [r for r in time_sel if (r["model"] or "").lower() == model.lower()]
+            models = self._models(sel)
         else:
             sel = time_sel
+            models = all_models
 
         kpi = self._kpi(sel)
         today_sel = [r for r in recs if r["t"] >= today]
@@ -367,6 +369,40 @@ class Collector(object):
         kpi["all_tokens"] = ak["tokens"]
         kpi["all_credit"] = ak["credit"]
 
+        # 当选定单一模型时，计算其内部 Token 与积分构成（缓存命中 / 未命中输入 / 生成输出）
+        breakdown = None
+        if model:
+            tot_tok = max(1, kpi["tokens"])
+            tot_crd = kpi["credit"]
+            hit = kpi["cache_hit"]
+            miss = kpi["cache_miss"]
+            out = kpi["output"]
+            denom = (hit * 0.1) + (miss * 1.0) + (out * 4.0)
+            if denom > 0:
+                hit_crd = round(tot_crd * (hit * 0.1) / denom, 2)
+                miss_crd = round(tot_crd * (miss * 1.0) / denom, 2)
+                out_crd = round(tot_crd - hit_crd - miss_crd, 2)
+                if out_crd < 0:
+                    out_crd = 0.0
+            else:
+                hit_crd = miss_crd = out_crd = 0.0
+
+            breakdown = {
+                "model": model,
+                "tokens": kpi["tokens"],
+                "credit": tot_crd,
+                "token_parts": [
+                    {"name": "缓存命中", "val": hit, "share": hit / float(tot_tok), "color": "#06b6d4"},
+                    {"name": "未命中输入", "val": miss, "share": miss / float(tot_tok), "color": "#f59e0b"},
+                    {"name": "生成输出", "val": out, "share": out / float(tot_tok), "color": "#7c3aed"},
+                ],
+                "credit_parts": [
+                    {"name": "缓存命中", "val": hit_crd, "share": (hit_crd / tot_crd) if tot_crd > 0 else 0, "color": "#06b6d4"},
+                    {"name": "未命中输入", "val": miss_crd, "share": (miss_crd / tot_crd) if tot_crd > 0 else 0, "color": "#f59e0b"},
+                    {"name": "生成输出", "val": out_crd, "share": (out_crd / tot_crd) if tot_crd > 0 else 0, "color": "#7c3aed"},
+                ],
+            }
+
         series = self._series(sel, actual_start, actual_end, range_key)
         speeds = self._speeds(sel if model else recs, actual_end, speed_min)
         sess_rows = self._sessions(sel, sessions, ctx, now)
@@ -381,7 +417,9 @@ class Collector(object):
             "kpi": kpi,
             "series": series,
             "speeds": speeds,
-            "models": all_models,
+            "models": models,
+            "all_models": all_models,
+            "breakdown": breakdown,
             "sessions": sess_rows,
             "recent": recent,
             "status": {
